@@ -15,9 +15,9 @@ public class GameEngine {
 	public void setPlayer(Player player){
 		this.player = player;
 	}
-
 	// Attempt to move player
 	public Boolean movePlayer(String direction) {
+
 		return false;
 	}
 

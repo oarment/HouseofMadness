@@ -50,6 +50,8 @@ public class TBAGServlet extends HttpServlet {
 		if (!engine.movePlayer(command)) {
 			dialog += "Sorry, command not recognized.\n";
 		}
+			
+
 
 		// the JSP will display updated dialog
 		req.setAttribute("dialog", dialog);
