@@ -9,16 +9,23 @@ public class GameEngine {
 
 	private Player player;
 
-	public GameEngine(){
+	public GameEngine() {
 	}
 
-	public void setPlayer(Player player){
+	public void setPlayer(Player player) {
 		this.player = player;
 	}
+
 	// Attempt to move player
 	public Boolean movePlayer(String direction) {
-
-		return false;
+		if (direction.equals("left")) {
+			return true;
+		} else if (direction.equals("climb")) {
+			return true;
+		} else return false;
 	}
+
+
+
 
 }

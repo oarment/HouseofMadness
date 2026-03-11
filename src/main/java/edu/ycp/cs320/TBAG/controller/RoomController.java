@@ -7,7 +7,7 @@ import java.util.List;
 public class RoomController {
 
     public List<Room> map;
-    public initializeMap() {
+    public void initializeMap() {
         map = new ArrayList<Room>();
         Room room1 = new Room(1, "Main Hall, Front", 4, 0, 3, 2);
         Room room2 = new Room(2, "Lounge", 0, 0, 1, 0);
