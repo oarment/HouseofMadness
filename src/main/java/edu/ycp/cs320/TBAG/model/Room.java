@@ -19,6 +19,15 @@ public class Room {
         this.westRoomId =  westRoomId;
     }
 
+    public String getName(int roomID){
+        return name;
+    }
+
+    public int getNorth(int roomID) {return northRoomId;}
+    public int getSouth(int roomID) {return southRoomId;}
+    public int getEast(int roomID) {return eastRoomId;}
+    public int getWest(int roomID) {return westRoomId;}
+
 
 
 

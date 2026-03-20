@@ -18,11 +18,10 @@ public class GameEngine {
 
 	// Attempt to move player
 	public Boolean movePlayer(String direction) {
-		if (direction.equals("left")) {
+		if (direction.equals("north") || direction.equals("west") || direction.equals("east") || direction.equals("south") || direction.equals("jump")) {
 			return true;
-		} else if (direction.equals("climb")) {
-			return true;
-		} else return false;
+		}
+		else return false;
 	}
 
 

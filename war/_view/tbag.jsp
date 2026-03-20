@@ -37,6 +37,11 @@
                     <td class-"label">Sanity: ${sanity}</td>
                 </tr>
             </table>
+            <table>
+                <tr>
+                    <td class="label">Location: ${location}</td>
+                </tr>
+            </table>
             </div>
 			<div style="font-family: courier new; width: 500px; height: 500px; overflow: auto; border: 1px solid black; padding: 5px; text-align: left; white-space: pre-line; margin: auto;">
 			${dialog}

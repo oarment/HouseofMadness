@@ -17,12 +17,22 @@ public class Player extends Actor {
 	public Player(Integer roomID) {
 		this.roomID = roomID;
 	}
-	
+
+
+
+
 	public Integer getRoomID() {
 		return roomID;
 	}
-	
+	public Integer getHealth() {return health;}
+	public Integer getSanity() {return sanity;}
+	public String getName() {return name;}
+	public Integer getDamage() {return damage;}
+
+	public void setSanity(int s) {sanity = s;}
 	public void setRoomID(Integer roomID) {
 		this.roomID = roomID;
 	}
+	public void setHealth(int hp) {health = hp;}
+	public void setDamage(int dmg) {damage = dmg;}
 }
