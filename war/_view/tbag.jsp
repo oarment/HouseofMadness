@@ -33,8 +33,8 @@
             <div style="font-family: courier new; font-size: 20px;">
             <table>
                 <tr>
-                    <td class="label">Health: ${health}</td>
-                    <td class-"label">Sanity: ${sanity}</td>
+                    <td class="label">Health: ${player.health}</td>
+                    <td class-"label">Sanity: ${player.sanity}</td>
                 </tr>
             </table>
             <table>

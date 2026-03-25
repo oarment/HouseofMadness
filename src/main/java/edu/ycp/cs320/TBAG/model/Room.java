@@ -9,26 +9,36 @@ public class Room {
     private int eastRoomId;
     private int westRoomId;
 
-
-    public Room(int  roomID, String name, int northRoomId, int southRoomId, int eastRoomId, int westRoomId ) {
+    public Room(int roomID, String name, int northRoomId, int southRoomId, int eastRoomId, int westRoomId) {
         this.roomID = roomID;
         this.name = name;
         this.northRoomId = northRoomId;
         this.southRoomId = southRoomId;
         this.eastRoomId = eastRoomId;
-        this.westRoomId =  westRoomId;
+        this.westRoomId = westRoomId;
     }
 
-    public String getName(int roomID){
+    public int getRoomID() {
+        return roomID;
+    }
+
+    public String getName() {
         return name;
     }
 
-    public int getNorth(int roomID) {return northRoomId;}
-    public int getSouth(int roomID) {return southRoomId;}
-    public int getEast(int roomID) {return eastRoomId;}
-    public int getWest(int roomID) {return westRoomId;}
+    public int getNorth() {
+        return northRoomId;
+    }
 
+    public int getSouth() {
+        return southRoomId;
+    }
 
+    public int getEast() {
+        return eastRoomId;
+    }
 
-
+    public int getWest() {
+        return westRoomId;
+    }
 }

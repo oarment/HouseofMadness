@@ -19,13 +19,49 @@ public class TBAGServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@Override
+
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
 		System.out.println("TBAG Servlet: doGet");
 
+		HttpSession session = req.getSession();
 
-		// call JSP to generate empty form
+		// Try to get engine from session
+		GameEngine engine = (GameEngine) session.getAttribute("engine");
+
+		// If first time, create everything
+		if (engine == null) {
+			engine = new GameEngine();
+
+			// Initialize map
+			RoomController rc = new RoomController();
+			engine.setMap(rc.initializeMap());
+
+			// Initialize player
+			Player player = new Player();
+			player.setHealth(100);
+			player.setSanity(100);
+			player.setRoomID(1);
+
+			engine.setPlayer(player);
+
+			// Save engine in session
+			session.setAttribute("engine", engine);
+		}
+
+		// Get player + location
+		Player player = engine.getPlayer();
+		String location = engine.getCurrentLocation();
+
+		// Initialize dialog if needed
+		String dialog = "";
+
+		// Send to JSP
+		req.setAttribute("player", player);
+		req.setAttribute("location", location);
+		req.setAttribute("dialog", dialog);
+
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 	}
 
@@ -38,99 +74,49 @@ public class TBAGServlet extends HttpServlet {
 		// create Player model
 		HttpSession session = req.getSession();
 
-		// Only create player if it doesn't exist
-		Player player = (Player) session.getAttribute("player");
+// Get engine from session
+		GameEngine engine = (GameEngine) session.getAttribute("engine");
 
-		if (player == null) {
-			player = new Player();
+		if (engine == null) {
+			engine = new GameEngine();
+
+			RoomController rc = new RoomController();
+			engine.setMap(rc.initializeMap());
+
+			Player player = new Player();
 			player.setHealth(100);
 			player.setSanity(100);
 			player.setRoomID(1);
-			player.setDamage(1);
 
-			session.setAttribute("player", player);
+			engine.setPlayer(player);
+
+			session.setAttribute("engine", engine);
 		}
 
-		req.setAttribute("player", player);
-
-		// Retrieve map
-		List<Room> map = (List<Room>) session.getAttribute("map");
-
-
-		if (map == null) {
-			RoomController roomController = new RoomController();
-			map = roomController.initializeMap();
-			session.setAttribute("map", map);
-		}
-
-		// create GameEngine controller - controller does not persist between requests
-		// must recreate it each time a Post comes in
-		GameEngine engine = new GameEngine();
-
-		// assign model reference to controller so that controller can access model
-		engine.setPlayer(player);
-		RoomController RoomController = new RoomController();
-
-		//set the map up
-		/*TODO - implement the initializemap() method
-		- assign them to an arraylist
-		- correctly update room location based on movement commands
-		 */
-
-		// Get running dialog text
+// Get input
+		String command = req.getParameter("command");
 		String dialog = req.getParameter("dialog");
 
-		// get direction command from jsp
-		String command = req.getParameter("command");
-		// Append user's command
-		dialog += command + "\n"; //adds command to return in text box on page
-		// Attempt to move player
-		String temp = "";
-		String location = "";
+// Process command
+		String result = engine.processCommand(command);
 
+// Append dialog
+		dialog += command + "\n";
+		dialog += result;
 
+// Get updated state
+		String location = engine.getCurrentLocation();
+		Player player = engine.getPlayer();
 
-		if (engine.movePlayer(command))
-		{
-			if(command.equals("north"))
-			{
-				temp = "You went north.\n";
-				location = "Main Hall N";
-			}
-			if(command.equals("east"))
-			{
-				temp = "You went east.\n";
-				location = "Library";
-			}
-			if(command.equals("west"))
-			{
-				temp = "You went west.\n";
-				location = "Lounge";
-			}
-			if(command.equals("south"))
-			{
-				temp = "You went south.\n";
-				location = "Main Hall S";
-			}
-			if(command.equals("jump"))
-			{
-				if(player.getHealth() < 100)
-				{
-					temp = "Stop jumping, you're hurting yourself.\n";
-					player.setHealth(player.getHealth()-10);
-				}
-				else{
-					temp = "You jumped and hit your head. -10hp\n";
-					player.setHealth(player.getHealth()-10);
-				}
+// Send to JSP
+		req.setAttribute("location", location);
+		req.setAttribute("dialog", dialog);
+		req.setAttribute("player", player);
 
-			}
-		}
-		if (!engine.movePlayer(command)) {
-			temp = "Sorry, command not recognized.\n";
+// Save engine back
+		session.setAttribute("engine", engine);
 
-		}
-		dialog += temp;
+		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 		// get health and sanity of player
 		String health = player.getHealth().toString();
 		String sanity = player.getSanity().toString();
