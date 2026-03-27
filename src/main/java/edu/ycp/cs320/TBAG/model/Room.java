@@ -9,6 +9,8 @@ public class Room {
     private int eastRoomId;
     private int westRoomId;
 
+    private Inventory inventory;
+
     public Room(int roomID, String name, int northRoomId, int southRoomId, int eastRoomId, int westRoomId) {
         this.roomID = roomID;
         this.name = name;
@@ -16,6 +18,11 @@ public class Room {
         this.southRoomId = southRoomId;
         this.eastRoomId = eastRoomId;
         this.westRoomId = westRoomId;
+        this.inventory = new Inventory();
+    }
+
+    public Inventory getInventory() {
+        return inventory;
     }
 
     public int getRoomID() {
