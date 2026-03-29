@@ -21,6 +21,13 @@
             color: #00ff1e;
         }
         </style>
+        <script>
+
+          window.onload = function() {
+            document.getElementById("command").focus();
+          };
+
+        </script>
 	</head>
 
 	<body>
@@ -43,7 +50,7 @@
                 </tr>
             </table>
             </div>
-			<div style="font-family: courier new; width: 500px; height: 500px; overflow: auto; border: 1px solid black; padding: 5px; text-align: left; white-space: pre-line; margin: auto;">
+			<div style="display: flex; flex-direction: column-reverse; overflow-y: auto;font-family: courier new; width: 500px; height: 500px; overflow: auto; border: 1px solid black; padding: 5px; text-align: left; white-space: pre-line; margin: auto;">
 			${dialog}
 			</div>
 		<form action="${pageContext.servletContext.contextPath}/tbag" method="post">
@@ -51,7 +58,7 @@
 			<table>
 				<tr>
 					<td class="label">Command:</td>
-					<td><input type="text" name="command" size="50" value="${command}" /></td>
+					<td><input type="text" id="command" name="command" size="50" value="${command}" /></td>
 				</tr>
 			</table>
 			</div>
