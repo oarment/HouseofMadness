@@ -12,8 +12,9 @@ import javax.servlet.http.HttpSession;
 
 import edu.ycp.cs320.TBAG.controller.GameEngine;
 import edu.ycp.cs320.TBAG.controller.RoomController;
+import edu.ycp.cs320.TBAG.model.Monster;
 import edu.ycp.cs320.TBAG.model.Player;
-import edu.ycp.cs320.TBAG.model.Room;
+
 
 public class TBAGServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -33,6 +34,15 @@ public class TBAGServlet extends HttpServlet {
 		// If first time, create everything
 		if (engine == null) {
 			engine = new GameEngine();
+
+			// Initialize monsters
+			List<Monster> initialMonsters = new ArrayList<>();
+			// Example: Put a Goblin in the Lounge (Room 2) with 10 HP and 2 Damage
+			initialMonsters.add(new Monster("Werewolf", 8, 2, 2, "health"));
+			// Example: Put a Ghost in the Library (Room 3) with 15 HP and 5 Damage
+			initialMonsters.add(new Monster("Ghoul", 4, 1, 3, "sanity"));
+
+			engine.setMonsters(initialMonsters);
 
 			// Initialize map
 			RoomController rc = new RoomController();
@@ -79,6 +89,15 @@ public class TBAGServlet extends HttpServlet {
 
 		if (engine == null) {
 			engine = new GameEngine();
+
+			// Initialize monsters
+			List<Monster> initialMonsters = new ArrayList<>();
+			// Example: Put a Goblin in the Lounge (Room 2) with 10 HP and 2 Damage
+			initialMonsters.add(new Monster("Werewolf", 8, 2, 2, "health"));
+			// Example: Put a Ghost in the Library (Room 3) with 15 HP and 5 Damage
+			initialMonsters.add(new Monster("Ghoul", 4, 1, 3, "sanity"));
+
+			engine.setMonsters(initialMonsters);
 
 			RoomController rc = new RoomController();
 			engine.setMap(rc.initializeMap());
@@ -131,6 +150,8 @@ public class TBAGServlet extends HttpServlet {
 		// the JSP will display updated health & sanity
 		req.setAttribute("health", health);
 		req.setAttribute("sanity", sanity);
+
+
 
 		// now call the JSP to render the new page
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
