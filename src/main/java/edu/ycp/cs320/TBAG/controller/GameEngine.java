@@ -1,9 +1,11 @@
 package edu.ycp.cs320.TBAG.controller;
 
+import edu.ycp.cs320.TBAG.model.Monster;
 import edu.ycp.cs320.TBAG.model.Player;
 import edu.ycp.cs320.TBAG.model.Room;
 import edu.ycp.cs320.TBAG.model.Item;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,11 +16,28 @@ public class GameEngine {
 	private Player player;
 	private List<Room> map;
 
+	// 1. ADDED THESE MISSING VARIABLES
+	private List<Monster> monsters;
+	private CombatController combatController;
+
 	public GameEngine() {
+		this.monsters = new ArrayList<>();
+		this.combatController = new CombatController();
 	}
 
 	public void setPlayer(Player player) {
 		this.player = player;
+	}
+	public void setMonsters(List<Monster> monsters) {
+		this.monsters = monsters;
+	}
+	public Monster getMonsterInCurrentRoom() {
+		for (Monster m : monsters) {
+			if (m.getRoomID() == player.getRoomID() && m.getHealth() > 0) {
+				return m;
+			}
+		}
+		return null;
 	}
 	public Player getPlayer() {return player;}
 	public void setMap(List<Room> map) {
@@ -33,6 +52,7 @@ public class GameEngine {
 		}
 		return null;
 	}
+
 	// Attempt to move player
 	public String processCommand(String command) {
 
@@ -45,8 +65,23 @@ public class GameEngine {
 		int nextRoomId = 0;
 		String message = "";
 
-        String[] parts = command.toLowerCase().split(" ");
-        String action = parts[0];
+		String[] parts = command.toLowerCase().split(" ");
+		String action = parts[0];
+
+		// 2. ADDED COMBAT TRAP LOGIC
+		Monster monsterInRoom = getMonsterInCurrentRoom();
+		boolean inCombat = (monsterInRoom != null);
+
+		// If the player is in combat, restrict their actions!
+		if (inCombat) {
+			if (action.equals("attack") || action.equals("fight")) {
+				// Process one turn of combat
+				return combatController.attackTurn(player, monsterInRoom);
+			} else {
+				// Block movement and other commands
+				return "You can't do that! A " + monsterInRoom.getName() + " blocks your path!\n(Type 'attack' to fight)\n";
+			}
+		}
 
 		switch (action) {
 			case "north":
@@ -78,17 +113,22 @@ public class GameEngine {
 				player.setHealth(player.getHealth() - 10);
 				return message;
 
-            case "pickup":
-                return pickUpItem(0);
+			case "pickup":
+				return pickUpItem(0);
 
-            case "drop":
-                return dropItemByName(command);
+			case "drop":
+				return dropItemByName(command);
 
-            case "show":
-                if (command.equals("show inventory")) {
-                    return showInventory();
-                }
-                return "Invalid show command.\n";
+			case "show":
+				if (command.equals("show inventory")) {
+					return showInventory();
+				}
+				return "Invalid show command.\n";
+
+			// 3. ADDED ATTACK COMMAND FOR EMPTY ROOMS
+			case "attack":
+			case "fight":
+				return "There is nothing here to attack.\n";
 
 			default:
 				return "Sorry, command not recognized.\n";
@@ -108,7 +148,16 @@ public class GameEngine {
 		// Move player
 		player.setRoomID(nextRoomId);
 
-		return message + "\n" + getRoomItems() + "\n";
+		// 4. FIXED RETURN STATEMENT & ADDED AMBUSH ALERT
+		message += "\n" + getRoomItems() + "\n";
+
+		// Check if they just walked into a room with a NEW monster
+		Monster newMonsterInRoom = getMonsterInCurrentRoom();
+		if (newMonsterInRoom != null) {
+			message += "\nWatch out! A " + newMonsterInRoom.getName() + " is here! Combat started!\n";
+		}
+
+		return message;
 	}
 
 	public String getCurrentLocation() {
@@ -116,73 +165,72 @@ public class GameEngine {
 		return (room != null) ? room.getName() : "Unknown";
 	}
 
-    public String pickUpItem(int itemID) {
-        Room room = getRoomById(player.getRoomID());
+	public String pickUpItem(int itemID) {
+		Room room = getRoomById(player.getRoomID());
 
-        if (room.getInventory().getItems().isEmpty()) {
-            return "There are no items here.\n";
-        }
+		if (room.getInventory().getItems().isEmpty()) {
+			return "There are no items here.\n";
+		}
 
-        var item = room.getInventory().getItems().get(itemID);
+		var item = room.getInventory().getItems().get(itemID);
 
-        player.getInventory().addItem(item);
-        room.getInventory().removeItem(item);
+		player.getInventory().addItem(item);
+		room.getInventory().removeItem(item);
 
-        return " You picked up " + item.getName() + ".\n";
-    }
+		return " You picked up " + item.getName() + ".\n";
+	}
 
-    public String getRoomItems() {
-        Room room = getRoomById(player.getRoomID());
+	public String getRoomItems() {
+		Room room = getRoomById(player.getRoomID());
 
-        if( room.getInventory().getItems().isEmpty() ) {
-            return "Items here: none";
-        }
+		if( room.getInventory().getItems().isEmpty() ) {
+			return "Items here: none";
+		}
 
-        String result = "Items here:\n";
+		String result = "Items here:\n";
 
-        for(Item item : room.getInventory().getItems()) {
-            result += "- " + item.getName() + ", ";
-        }
+		for(Item item : room.getInventory().getItems()) {
+			result += "- " + item.getName() + ", ";
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    public String showInventory() {
-        if( player.getInventory().getItems().isEmpty() ) {
-            return "Your Invnetory is empty\n";
-        }
+	public String showInventory() {
+		if( player.getInventory().getItems().isEmpty() ) {
+			return "Your Inventory is empty\n";
+		}
 
-        String result = "Your Inventory:\n";
-        for(Item item : player.getInventory().getItems()) {
-            result += "- " + item.getName() + "\n ";
-        }
-        return result;
-    }
+		String result = "Your Inventory:\n";
+		for(Item item : player.getInventory().getItems()) {
+			result += "- " + item.getName() + "\n ";
+		}
+		return result;
+	}
 
-    public String dropItemByName(String command) {
-        Room room = getRoomById(player.getRoomID());
+	public String dropItemByName(String command) {
+		Room room = getRoomById(player.getRoomID());
 
-        if (player.getInventory().getItems().isEmpty()) {
-            return "You don't have anything to drop.\n";
-        }
-        String[] parts = command.split(" ", 2);
+		if (player.getInventory().getItems().isEmpty()) {
+			return "You don't have anything to drop.\n";
+		}
+		String[] parts = command.split(" ", 2);
 
-        if (parts.length < 2) {
-            return "Drop What?\n";
-        }
-        String itemName = parts[1].toLowerCase();
+		if (parts.length < 2) {
+			return "Drop What?\n";
+		}
+		String itemName = parts[1].toLowerCase();
 
-        for(Item item : player.getInventory().getItems()) {
-            if (item.getName().toLowerCase().equals(itemName)) {
+		for(Item item : player.getInventory().getItems()) {
+			if (item.getName().toLowerCase().equals(itemName)) {
 
-                player .getInventory().removeItem(item);
-                room.getInventory().addItem(item);
+				player.getInventory().removeItem(item);
+				room.getInventory().addItem(item);
 
-                return "You dropped: \n" + item.getName() + ".\n";
-            }
-        }
+				return "You dropped: \n" + item.getName() + ".\n";
+			}
+		}
 
-        return "You don't have that item.\n";
-    }
-
+		return "You don't have that item.\n";
+	}
 }
