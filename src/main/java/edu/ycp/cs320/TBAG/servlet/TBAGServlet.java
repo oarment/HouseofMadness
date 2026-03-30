@@ -135,7 +135,7 @@ public class TBAGServlet extends HttpServlet {
 // Save engine back
 		session.setAttribute("engine", engine);
 
-		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
+		//req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 		// get health and sanity of player
 		String health = player.getHealth().toString();
 		String sanity = player.getSanity().toString();
