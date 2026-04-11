@@ -20,9 +20,15 @@ public class RoomController {
         map.add(new Room(6, "Closet", 0, 5, 0, 0));
         map.add(new Room(7, "Main Hall, End", 0, 4, 0, 8));
         map.add(new Room(8, "Bathroom", 0, 0, 7, 0));
-        map.get(0).getInventory().addItem(new Item("Flashlight", 0));
-        map.get(1).getInventory().addItem(new Item("keys", 0));
-        map.get(3).getInventory().addItem(new Item("Potion", 20));
+
+
+        map.get(0).getInventory().addItem(new Item("Flashlight", "utility",  0));
+        map.get(1).getInventory().addItem(new Item("Wooden Stake", "weapon", 5));
+        map.get(3).getInventory().addItem(new Item("Health Potion", "health", 10));
+        map.get(2).getInventory().addItem(new Item("Sanity Pills", "sanity", 5));
+        map.get(0).getInventory().addItem(new Item("Knife", "weapon", 3));
+        map.get(4).getInventory().addItem(new Item("Broken Pipe", "weapon", 2));
+        map.get(7).getInventory().addItem(new Item("Bandages", "health",5 ));
 
         return map;
     }

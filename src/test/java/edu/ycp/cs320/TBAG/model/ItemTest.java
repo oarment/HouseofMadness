@@ -1,47 +1,47 @@
-/*package edu.ycp.cs320.TBAG.model;
+package edu.ycp.cs320.TBAG.model;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class ItemTest {
 
     @Test
     public void testConstructorAndGetters() {
-        Item item = new Item("Potion", "health", 20);
+        Item item = new Item("Knife", "weapon", 3);
 
-        assertEquals("Potion", item.getName());
-        assertEquals("health", item.getType());
-        assertEquals(20, item.getEffect());
+        assertEquals("Knife", item.getName());
+        assertEquals("weapon", item.getType());
+        assertEquals(3, item.getEffect());
     }
 
     @Test
-    public void testSetName() {
-        Item item = new Item("Potion", "health", 20);
+    public void testSetters() {
+        Item item = new Item("Knife", "weapon", 3);
 
-        item.setName("Super Potion");
+        item.setName("Flashlight");
+        item.setEffect(10);
 
-        assertEquals("Super Potion", item.getName());
+        assertEquals("Flashlight", item.getName());
+        assertEquals(10, item.getEffect());
     }
 
     @Test
-    public void testSetEffect() {
-        Item item = new Item("Potion", "health", 20);
-
-        item.setEffect(50);
-
-        assertEquals(50, item.getEffect());
-    }
-
-    @Test
-    public void testDifferentItemTypes() {
+    public void testEquippedWeapon() {
         Item weapon = new Item("Knife", "weapon", 3);
-        Item sanityItem = new Item("Pills", "sanity", 10);
+        Item item = new Item("Flashlight", "utility", 0);
 
-        assertEquals("weapon", weapon.getType());
-        assertEquals(3, weapon.getEffect());
+        item.setEquippedWeapon(weapon);
 
-        assertEquals("sanity", sanityItem.getType());
-        assertEquals(10, sanityItem.getEffect());
+        assertEquals(weapon, item.getEquippedWeapon());
+    }
+
+    @Test
+    public void testEquippedUtility() {
+        Item utility = new Item("Flashlight", "utility", 0);
+        Item item = new Item("Knife", "weapon", 3);
+
+        item.setEquippedUtility(utility);
+
+        assertEquals(utility, item.getEquippedUtility());
     }
 }
-*/

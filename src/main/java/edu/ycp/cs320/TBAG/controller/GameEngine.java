@@ -75,8 +75,12 @@ public class GameEngine {
 		// If the player is in combat, restrict their actions!
 		if (inCombat) {
 			if (action.equals("attack") || action.equals("fight")) {
-				// Process one turn of combat
-				return combatController.attackTurn(player, monsterInRoom);
+                // Process one turn of combat
+                return combatController.attackTurn(player, monsterInRoom);
+            }
+            else if (action.equals("use")) {
+                return useItem(command);
+
 			} else {
 				// Block movement and other commands
 				return "You can't do that! A " + monsterInRoom.getName() + " blocks your path!\n(Type 'attack' to fight)\n";
@@ -114,7 +118,11 @@ public class GameEngine {
 				return message;
 
 			case "pickup":
-				return pickUpItem(0);
+                if(parts.length < 2) {
+                    return "Pick Up What?\n";
+                }
+                String itemName = command.substring(7); // handles "sanity pills"
+				return pickUpItem(itemName);
 
 			case "drop":
 				return dropItemByName(command);
@@ -124,6 +132,14 @@ public class GameEngine {
 					return showInventory();
 				}
 				return "Invalid show command.\n";
+
+            case "use":
+                return useItem(command);
+            case "unequip":
+                player.setEquippedWeapon(null);
+                player.setEquippedUtility(null);
+                player.setDamage(1);
+                return "You unequipped your item.\n";
 
 			// 3. ADDED ATTACK COMMAND FOR EMPTY ROOMS
 			case "attack":
@@ -165,19 +181,19 @@ public class GameEngine {
 		return (room != null) ? room.getName() : "Unknown";
 	}
 
-	public String pickUpItem(int itemID) {
+	public String pickUpItem(String itemName) {
 		Room room = getRoomById(player.getRoomID());
 
-		if (room.getInventory().getItems().isEmpty()) {
-			return "There are no items here.\n";
-		}
+        for (Item item : room.getInventory().getItems()) {
+            if(item.getName().equalsIgnoreCase(itemName)) {
 
-		var item = room.getInventory().getItems().get(itemID);
+                player.getInventory().addItem(item);
+                room.getInventory().removeItem(item);
 
-		player.getInventory().addItem(item);
-		room.getInventory().removeItem(item);
-
-		return " You picked up " + item.getName() + ".\n";
+                return "You picked up: " + item.getName() + ".\n";
+            }
+        }
+        return "That item is not here \n";
 	}
 
 	public String getRoomItems() {
@@ -233,4 +249,46 @@ public class GameEngine {
 
 		return "You don't have that item.\n";
 	}
+
+    public String useItem(String command) {
+        if (player.getInventory().getItems().isEmpty()) {
+            return "You don't have item to use.\n";
+        }
+
+        String[] parts = command.split(" ", 2);
+        if (parts.length < 2) {
+            return "Use What?\n";
+        }
+
+        String itemName = parts[1].trim();
+
+        for (Item item : player.getInventory().getItems()) {
+
+            if (item.getName().equalsIgnoreCase(itemName) && item.getEffect() > 0){
+                switch (item.getType()) {
+                    case "health":
+                        player.setHealth(player.getHealth() + item.getEffect());
+                        player.getInventory().removeItem(item);
+                        return "You used " + item.getName() + " and gained " + item.getEffect() + " health.\n";
+                    case "sanity":
+                        player.setSanity(player.getSanity() + item.getEffect());
+                        player.getInventory().removeItem(item);
+                        return "You used " + item.getName() + " and gained " + item.getEffect() + " sanity.\n";
+                    case "weapon":
+                        player.setEquippedWeapon(item);
+                        player.setDamage(player.getDamage() + item.getEffect());
+                        return "You equipped " + item.getName() + ". Damage increased by " + item.getEffect() + ".\n";
+                    case "utility":
+                        player.setEquippedUtility(item);
+                        return "You equipped " + item.getName() + ".\n";
+                    default:
+                        return "You can't use that item.\n";
+
+                }
+            }
+        }
+        return "You don't have that item.\n";
+    }
+
+
 }

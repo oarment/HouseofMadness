@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="edu.ycp.cs320.TBAG.model.ItemTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-04-11T11:11:14.871Z" hostname="Borie" time="0.021">
+  <properties/>
+  <testcase name="testEquippedWeapon()" classname="edu.ycp.cs320.TBAG.model.ItemTest" time="0.013"/>
+  <testcase name="testEquippedUtility()" classname="edu.ycp.cs320.TBAG.model.ItemTest" time="0.001"/>
+  <testcase name="testConstructorAndGetters()" classname="edu.ycp.cs320.TBAG.model.ItemTest" time="0.003"/>
+  <testcase name="testSetters()" classname="edu.ycp.cs320.TBAG.model.ItemTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

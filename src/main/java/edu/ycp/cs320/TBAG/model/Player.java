@@ -7,7 +7,8 @@ import edu.ycp.cs320.TBAG.model.Inventory;
 public class Player extends Actor {
 	private Integer roomID;
 	private int sanity;
-
+    private Item equippedWeapon;
+    private Item equippedUtility;
     private Inventory inventory;
 
 	public Player() {
@@ -43,4 +44,6 @@ public class Player extends Actor {
 	}
 	public void setHealth(int hp) {health = hp;}
 	public void setDamage(int dmg) {damage = dmg;}
+    public void setEquippedUtility(Item item) { equippedUtility = item; }
+    public void setEquippedWeapon(Item item) {this.equippedUtility = item;}
 }
