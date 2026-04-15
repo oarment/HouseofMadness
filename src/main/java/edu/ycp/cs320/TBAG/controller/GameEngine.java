@@ -1,5 +1,6 @@
 package edu.ycp.cs320.TBAG.controller;
 
+import edu.ycp.cs320.TBAG.db.IDatabase;
 import edu.ycp.cs320.TBAG.model.Monster;
 import edu.ycp.cs320.TBAG.model.Player;
 import edu.ycp.cs320.TBAG.model.Room;
@@ -16,21 +17,44 @@ public class GameEngine {
 	private Player player;
 	private List<Room> map;
 
-	// 1. ADDED THESE MISSING VARIABLES
 	private List<Monster> monsters;
 	private CombatController combatController;
+
+	private IDatabase db;
 
 	public GameEngine() {
 		this.monsters = new ArrayList<>();
 		this.combatController = new CombatController();
 	}
 
+	public void setDatabase(IDatabase db) {
+		this.db = db;
+	}
+
 	public void setPlayer(Player player) {
 		this.player = player;
 	}
+
+	public Player getPlayer() {
+		return player;
+	}
+
 	public void setMonsters(List<Monster> monsters) {
 		this.monsters = monsters;
 	}
+
+	public void setMap(List<Room> map) {
+		this.map = map;
+	}
+
+	public List<Room> getMap() {
+		return map;
+	}
+
+	public void loadMapFromDatabase() {
+		this.map = db.findFullMap();
+	}
+
 	public Monster getMonsterInCurrentRoom() {
 		for (Monster m : monsters) {
 			if (m.getRoomID() == player.getRoomID() && m.getHealth() > 0) {
@@ -38,10 +62,6 @@ public class GameEngine {
 			}
 		}
 		return null;
-	}
-	public Player getPlayer() {return player;}
-	public void setMap(List<Room> map) {
-		this.map = map;
 	}
 
 	public Room getRoomById(int id) {
@@ -53,9 +73,7 @@ public class GameEngine {
 		return null;
 	}
 
-	// Attempt to move player
 	public String processCommand(String command) {
-
 		Room currentRoom = getRoomById(player.getRoomID());
 
 		if (currentRoom == null) {
@@ -68,21 +86,13 @@ public class GameEngine {
 		String[] parts = command.toLowerCase().split(" ");
 		String action = parts[0];
 
-		// 2. ADDED COMBAT TRAP LOGIC
 		Monster monsterInRoom = getMonsterInCurrentRoom();
 		boolean inCombat = (monsterInRoom != null);
 
-		// If the player is in combat, restrict their actions!
 		if (inCombat) {
 			if (action.equals("attack") || action.equals("fight")) {
-                // Process one turn of combat
-                return combatController.attackTurn(player, monsterInRoom);
-            }
-            else if (action.equals("use")) {
-                return useItem(command);
-
+				return combatController.attackTurn(player, monsterInRoom);
 			} else {
-				// Block movement and other commands
 				return "You can't do that! A " + monsterInRoom.getName() + " blocks your path!\n(Type 'attack' to fight)\n";
 			}
 		}
@@ -115,17 +125,20 @@ public class GameEngine {
 					message = "You jumped and hit your head. -10hp\n";
 				}
 				player.setHealth(player.getHealth() - 10);
+				db.updatePlayer(player);
 				return message;
 
 			case "pickup":
-                if(parts.length < 2) {
-                    return "Pick Up What?\n";
-                }
-                String itemName = command.substring(7); // handles "sanity pills"
-				return pickUpItem(itemName);
+				return pickUpItem(0);
 
 			case "drop":
 				return dropItemByName(command);
+
+			case "equip":
+				return equipItemByName(command);
+
+			case "use":
+				return useItemByName(command);
 
 			case "show":
 				if (command.equals("show inventory")) {
@@ -133,15 +146,6 @@ public class GameEngine {
 				}
 				return "Invalid show command.\n";
 
-            case "use":
-                return useItem(command);
-            case "unequip":
-                player.setEquippedWeapon(null);
-                player.setEquippedUtility(null);
-                player.setDamage(1);
-                return "You unequipped your item.\n";
-
-			// 3. ADDED ATTACK COMMAND FOR EMPTY ROOMS
 			case "attack":
 			case "fight":
 				return "There is nothing here to attack.\n";
@@ -150,7 +154,6 @@ public class GameEngine {
 				return "Sorry, command not recognized.\n";
 		}
 
-		// Handle movement
 		if (nextRoomId == 0) {
 			return "You can't go that way.\n";
 		}
@@ -161,13 +164,11 @@ public class GameEngine {
 			return "You can't go that way.\n";
 		}
 
-		// Move player
 		player.setRoomID(nextRoomId);
+		db.updatePlayer(player);
 
-		// 4. FIXED RETURN STATEMENT & ADDED AMBUSH ALERT
 		message += "\n" + getRoomItems() + "\n";
 
-		// Check if they just walked into a room with a NEW monster
 		Monster newMonsterInRoom = getMonsterInCurrentRoom();
 		if (newMonsterInRoom != null) {
 			message += "\nWatch out! A " + newMonsterInRoom.getName() + " is here! Combat started!\n";
@@ -181,46 +182,50 @@ public class GameEngine {
 		return (room != null) ? room.getName() : "Unknown";
 	}
 
-	public String pickUpItem(String itemName) {
+	public String pickUpItem(int itemIndex) {
 		Room room = getRoomById(player.getRoomID());
 
-        for (Item item : room.getInventory().getItems()) {
-            if(item.getName().equalsIgnoreCase(itemName)) {
+		if (room.getInventory().getItems().isEmpty()) {
+			return "There are no items here.\n";
+		}
 
-                player.getInventory().addItem(item);
-                room.getInventory().removeItem(item);
+		Item item = room.getInventory().getItems().get(itemIndex);
 
-                return "You picked up: " + item.getName() + ".\n";
-            }
-        }
-        return "That item is not here \n";
+		player.getInventory().addItem(item);
+		room.getInventory().removeItem(item);
+
+		item.setRoomID(-1);
+		db.updateItem(item);
+
+		return "You picked up " + item.getName() + ".\n";
 	}
 
 	public String getRoomItems() {
 		Room room = getRoomById(player.getRoomID());
 
-		if( room.getInventory().getItems().isEmpty() ) {
+		if (room.getInventory().getItems().isEmpty()) {
 			return "Items here: none";
 		}
 
 		String result = "Items here:\n";
 
-		for(Item item : room.getInventory().getItems()) {
-			result += "- " + item.getName() + ", ";
+		for (Item item : room.getInventory().getItems()) {
+			result += "- " + item.getName() + "\n";
 		}
 
 		return result;
 	}
 
 	public String showInventory() {
-		if( player.getInventory().getItems().isEmpty() ) {
+		if (player.getInventory().getItems().isEmpty()) {
 			return "Your Inventory is empty\n";
 		}
 
 		String result = "Your Inventory:\n";
-		for(Item item : player.getInventory().getItems()) {
-			result += "- " + item.getName() + "\n ";
+		for (Item item : player.getInventory().getItems()) {
+			result += "- " + item.getName() + " [" + item.getType() + ", " + item.getEffect() + "]\n";
 		}
+		result += "Current damage: " + player.getDamage() + "\n";
 		return result;
 	}
 
@@ -230,65 +235,101 @@ public class GameEngine {
 		if (player.getInventory().getItems().isEmpty()) {
 			return "You don't have anything to drop.\n";
 		}
-		String[] parts = command.split(" ", 2);
 
+		String[] parts = command.split(" ", 2);
 		if (parts.length < 2) {
-			return "Drop What?\n";
+			return "Drop what?\n";
 		}
+
 		String itemName = parts[1].toLowerCase();
 
-		for(Item item : player.getInventory().getItems()) {
+		for (Item item : player.getInventory().getItems()) {
 			if (item.getName().toLowerCase().equals(itemName)) {
-
 				player.getInventory().removeItem(item);
 				room.getInventory().addItem(item);
 
-				return "You dropped: \n" + item.getName() + ".\n";
+				item.setRoomID(player.getRoomID());
+				db.updateItem(item);
+
+				return "You dropped " + item.getName() + ".\n";
 			}
 		}
 
 		return "You don't have that item.\n";
 	}
+	public String equipItemByName(String command) {
+		if (player.getInventory().getItems().isEmpty()) {
+			return "Your inventory is empty.\n";
+		}
 
-    public String useItem(String command) {
-        if (player.getInventory().getItems().isEmpty()) {
-            return "You don't have item to use.\n";
-        }
+		String[] parts = command.split(" ", 2);
+		if (parts.length < 2) {
+			return "Equip what?\n";
+		}
 
-        String[] parts = command.split(" ", 2);
-        if (parts.length < 2) {
-            return "Use What?\n";
-        }
+		String itemName = parts[1].toLowerCase();
 
-        String itemName = parts[1].trim();
+		for (Item item : player.getInventory().getItems()) {
+			if (item.getName().toLowerCase().equals(itemName)) {
+				if (!item.getType().equalsIgnoreCase("weapon")) {
+					return item.getName() + " is not a weapon.\n";
+				}
 
-        for (Item item : player.getInventory().getItems()) {
+				player.setDamage(item.getEffect());
+				db.updatePlayer(player);
 
-            if (item.getName().equalsIgnoreCase(itemName) && item.getEffect() > 0){
-                switch (item.getType()) {
-                    case "health":
-                        player.setHealth(player.getHealth() + item.getEffect());
-                        player.getInventory().removeItem(item);
-                        return "You used " + item.getName() + " and gained " + item.getEffect() + " health.\n";
-                    case "sanity":
-                        player.setSanity(player.getSanity() + item.getEffect());
-                        player.getInventory().removeItem(item);
-                        return "You used " + item.getName() + " and gained " + item.getEffect() + " sanity.\n";
-                    case "weapon":
-                        player.setEquippedWeapon(item);
-                        player.setDamage(player.getDamage() + item.getEffect());
-                        return "You equipped " + item.getName() + ". Damage increased by " + item.getEffect() + ".\n";
-                    case "utility":
-                        player.setEquippedUtility(item);
-                        return "You equipped " + item.getName() + ".\n";
-                    default:
-                        return "You can't use that item.\n";
+				return "You equipped " + item.getName() + ". Damage is now " + player.getDamage() + ".\n";
+			}
+		}
 
-                }
-            }
-        }
-        return "You don't have that item.\n";
-    }
+		return "You don't have that item.\n";
+	}
+	public String useItemByName(String command) {
+		if (player.getInventory().getItems().isEmpty()) {
+			return "Your inventory is empty.\n";
+		}
 
+		String[] parts = command.split(" ", 2);
+		if (parts.length < 2) {
+			return "Use what?\n";
+		}
+
+		String itemName = parts[1].toLowerCase();
+
+		for (Item item : player.getInventory().getItems()) {
+			if (item.getName().toLowerCase().equals(itemName)) {
+
+				if (item.getType().equalsIgnoreCase("health")) {
+					player.setHealth(player.getHealth() + item.getEffect());
+					player.getInventory().removeItem(item);
+
+					// mark item as consumed
+					item.setRoomID(-999);
+					db.updatePlayer(player);
+					db.updateItem(item);
+
+					return "You used " + item.getName() + ". Health increased by "
+							+ item.getEffect() + ".\n";
+				}
+
+				if (item.getType().equalsIgnoreCase("sanity")) {
+					player.setSanity(player.getSanity() + item.getEffect());
+					player.getInventory().removeItem(item);
+
+					// mark item as consumed
+					item.setRoomID(-999);
+					db.updatePlayer(player);
+					db.updateItem(item);
+
+					return "You used " + item.getName() + ". Sanity increased by "
+							+ item.getEffect() + ". Sanity is now " + player.getSanity() + ".\n";
+				}
+
+				return item.getName() + " cannot be used.\n";
+			}
+		}
+
+		return "You don't have that item.\n";
+	}
 
 }

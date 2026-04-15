@@ -1,41 +1,57 @@
 package edu.ycp.cs320.TBAG.model;
 
 public class Item {
+    private int id;
     private String name;
-    private int effect;
     private String type;
-    private Item equippedWeapon;
-    private Item equippedUtility;
+    private int effect;
+    private int roomID;
 
-    public Item(String name, String type, int effect) {
+    public Item(int id, String name, String type, int effect, int roomID) {
+        this.id = id;
         this.name = name;
-        this.effect = effect;
         this.type = type;
+        this.effect = effect;
+        this.roomID = roomID;
     }
 
-    public String getType() { return type; }
+    public int getID() {
+        return id;
+    }
+
+    public void setID(int id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
-    }
-
-    public int getEffect() {   // 🔥 FIXED naming
-        return effect;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setEffect(int effect) {   // 🔥 FIXED naming
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public int getEffect() {
+        return effect;
+    }
+
+    public void setEffect(int effect) {
         this.effect = effect;
     }
 
-    public Item getEquippedWeapon() { return equippedWeapon;}
+    public int getRoomID() {
+        return roomID;
+    }
 
-    public void setEquippedWeapon(Item weapon) { this.equippedWeapon = weapon ;}
-
-    public Item getEquippedUtility() { return equippedUtility;}
-
-    public void setEquippedUtility(Item utility) { this.equippedUtility = utility ;}
+    public void setRoomID(int roomID) {
+        this.roomID = roomID;
+    }
 }

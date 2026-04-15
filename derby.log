@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Wed Apr 15 00:25:48 EDT 2026:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.17.1.0 - (1913217): instance a816c00e-019d-8f63-607b-00000ebe4320 
+on database directory C:\Users\Owner\Documents\GitHub\tbag.db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@70dea4e 
+Loaded from file:/C:/Users/Owner/.gradle/caches/modules-2/files-2.1/org.apache.derby/derby/10.17.1.0/e90e61e8ee731614a9bafd3d81155e09fff5e80c/derby-10.17.1.0.jar
+java.vendor=Microsoft
+java.runtime.version=21.0.10+7-LTS
+user.dir=C:\Users\Owner\Documents\GitHub\HouseofMadness
+os.name=Windows 11
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

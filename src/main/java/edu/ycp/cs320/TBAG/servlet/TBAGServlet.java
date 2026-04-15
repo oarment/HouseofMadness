@@ -1,8 +1,6 @@
 package edu.ycp.cs320.TBAG.servlet;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,66 +9,55 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import edu.ycp.cs320.TBAG.controller.GameEngine;
-import edu.ycp.cs320.TBAG.controller.RoomController;
-import edu.ycp.cs320.TBAG.model.Monster;
+import edu.ycp.cs320.TBAG.db.DatabaseProvider;
+import edu.ycp.cs320.TBAG.db.IDatabase;
 import edu.ycp.cs320.TBAG.model.Player;
-
 
 public class TBAGServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
+	private IDatabase db;
+
 	@Override
+	public void init() throws ServletException {
+		try {
+			db = DatabaseProvider.getInstance();
+		} catch (Exception e) {
+			throw new ServletException("Failed to initialize database", e);
+		}
+	}
 
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-
-		System.out.println("TBAG Servlet: doGet");
-
-		HttpSession session = req.getSession();
-
-		// Try to get engine from session
+	private GameEngine initializeEngine(HttpSession session) {
 		GameEngine engine = (GameEngine) session.getAttribute("engine");
 
-		// If first time, create everything
 		if (engine == null) {
 			engine = new GameEngine();
+			engine.setDatabase(db);
 
-			// Initialize monsters
-			List<Monster> initialMonsters = new ArrayList<>();
-			// Example: Put a Goblin in the Lounge (Room 2) with 10 HP and 2 Damage
-			initialMonsters.add(new Monster("Werewolf", 8, 2, 2, "health"));
-			// Example: Put a Ghost in the Library (Room 3) with 15 HP and 5 Damage
-			initialMonsters.add(new Monster("Ghoul", 4, 1, 3, "sanity"));
-
-			engine.setMonsters(initialMonsters);
-
-			// Initialize map
-			RoomController rc = new RoomController();
-			engine.setMap(rc.initializeMap());
-
-			// Initialize player
-			Player player = new Player();
-			player.setHealth(100);
-			player.setSanity(100);
-			player.setRoomID(1);
-
+			Player player = db.findPlayer();
 			engine.setPlayer(player);
 
-			// Save engine in session
+			engine.loadMapFromDatabase();
+			db.loadPlayerInventory(player);
+
 			session.setAttribute("engine", engine);
 		}
 
-		// Get player + location
-		Player player = engine.getPlayer();
-		String location = engine.getCurrentLocation();
+		return engine;
+	}
 
-		// Initialize dialog if needed
-		String dialog = "";
 
-		// Send to JSP
-		req.setAttribute("player", player);
-		req.setAttribute("location", location);
-		req.setAttribute("dialog", dialog);
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+
+		HttpSession session = req.getSession();
+		GameEngine engine = initializeEngine(session);
+
+		req.setAttribute("player", engine.getPlayer());
+		req.setAttribute("location", engine.getCurrentLocation());
+		req.setAttribute("dialog", engine.getPlayer().getDialog());
+		req.setAttribute("roomItems", engine.getRoomItems());
 
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 	}
@@ -79,86 +66,34 @@ public class TBAGServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		System.out.println("TBAG Servlet: doPost");
-
-		// create Player model
 		HttpSession session = req.getSession();
+		GameEngine engine = initializeEngine(session);
 
-// Get engine from session
-		GameEngine engine = (GameEngine) session.getAttribute("engine");
-
-		if (engine == null) {
-			engine = new GameEngine();
-
-			// Initialize monsters
-			List<Monster> initialMonsters = new ArrayList<>();
-			// Example: Put a Goblin in the Lounge (Room 2) with 10 HP and 2 Damage
-			initialMonsters.add(new Monster("Werewolf", 8, 2, 2, "health"));
-			// Example: Put a Ghost in the Library (Room 3) with 15 HP and 5 Damage
-			initialMonsters.add(new Monster("Ghoul", 4, 1, 3, "sanity"));
-
-			engine.setMonsters(initialMonsters);
-
-			RoomController rc = new RoomController();
-			engine.setMap(rc.initializeMap());
-
-			Player player = new Player();
-			player.setHealth(100);
-			player.setSanity(100);
-			player.setRoomID(1);
-
-			engine.setPlayer(player);
-
-			session.setAttribute("engine", engine);
-		}
-
-// Get input
 		String command = req.getParameter("command");
 		String dialog = req.getParameter("dialog");
 
-// Process command
+		if (dialog == null) {
+			dialog = "";
+		}
+		if (command == null) {
+			command = "";
+		}
+
 		String result = engine.processCommand(command);
 
-// Append dialog
 		dialog += command + "\n";
 		dialog += result;
 
-// Get updated state
-		String location = engine.getCurrentLocation();
-		Player player = engine.getPlayer();
+		engine.getPlayer().setDialog(dialog);
+		db.updatePlayer(engine.getPlayer());
 
-// Send to JSP
-		req.setAttribute("location", location);
+		req.setAttribute("player", engine.getPlayer());
+		req.setAttribute("location", engine.getCurrentLocation());
 		req.setAttribute("dialog", dialog);
-		req.setAttribute("player", player);
+		req.setAttribute("roomItems", engine.getRoomItems());
 
-// Save engine back
 		session.setAttribute("engine", engine);
 
-		//req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
-		// get health and sanity of player
-		String health = player.getHealth().toString();
-		String sanity = player.getSanity().toString();
-
-		
-		// the JSP will display updated location name
-		req.setAttribute("location", location);
-
-		// the JSP will display updated dialog
-		req.setAttribute("dialog", dialog);
-		session.setAttribute("player", player);
-		// the JSP will display updated health & sanity
-		req.setAttribute("health", health);
-		req.setAttribute("sanity", sanity);
-
-
-
-		// now call the JSP to render the new page
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
-	}
-
-	// gets an Integer from the Posted form data, for the given attribute name
-	private int getInteger(HttpServletRequest req, String name) {
-		return Integer.parseInt(req.getParameter(name));
 	}
 }
