@@ -1,3 +1,7 @@
-Flashlight|0|1
-keys|0|2
-Potion|20|4
+0|Flashlight|utility|0|1
+1|Wooden Stake|weapon|5|2
+2|Health Potion|health|10|4
+3|Sanity Pills|sanity|5|3
+4|Knife|weapon|3|1
+5|Broken Pipe|weapon|2|5
+6|Bandages|health|5|8

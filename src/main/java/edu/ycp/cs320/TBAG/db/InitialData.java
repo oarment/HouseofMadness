@@ -2,6 +2,7 @@ package edu.ycp.cs320.TBAG.db;
 
 import edu.ycp.cs320.TBAG.model.Player;
 import edu.ycp.cs320.TBAG.model.Room;
+import edu.ycp.cs320.TBAG.model.Item;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -82,11 +83,13 @@ public class InitialData {
 
 				Iterator<String> i = tuple.iterator();
 
+				int id = Integer.parseInt(i.next());   // item id from CSV
 				String name = i.next();
+				String type = i.next();
 				int effect = Integer.parseInt(i.next());
 				int roomID = Integer.parseInt(i.next());
 
-				itemSeeds.add(new ItemSeed(name, effect, roomID));
+				itemSeeds.add(new ItemSeed(id, name, type, effect, roomID));
 			}
 
 			System.out.println("item seeds loaded from CSV file");
@@ -96,19 +99,62 @@ public class InitialData {
 		}
 	}
 
+	public static List<Item> getItems() throws IOException {
+		List<Item> itemList = new ArrayList<Item>();
+		ReadCSV readItems = new ReadCSV("items.csv");
+
+		try {
+			while (true) {
+				List<String> tuple = readItems.next();
+				if (tuple == null) {
+					break;
+				}
+
+				Iterator<String> i = tuple.iterator();
+
+				Item item = new Item(
+						Integer.parseInt(i.next()), // id
+						i.next(),                   // name
+						i.next(),                   // type
+						Integer.parseInt(i.next()), // effect
+						Integer.parseInt(i.next())  // roomID
+				);
+
+				itemList.add(item);
+			}
+
+			System.out.println("itemList loaded from CSV file");
+			return itemList;
+		} finally {
+			readItems.close();
+		}
+	}
+
 	public static class ItemSeed {
+		private int id;
 		private String name;
+		private String type;
 		private int effect;
 		private int roomID;
 
-		public ItemSeed(String name, int effect, int roomID) {
+		public ItemSeed(int id, String name, String type, int effect, int roomID) {
+			this.id = id;
 			this.name = name;
+			this.type = type;
 			this.effect = effect;
 			this.roomID = roomID;
 		}
 
+		public int getId() {
+			return id;
+		}
+
 		public String getName() {
 			return name;
+		}
+
+		public String getType() {
+			return type;
 		}
 
 		public int getEffect() {

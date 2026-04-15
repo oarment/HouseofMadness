@@ -103,9 +103,9 @@ public class DerbyDatabase implements IDatabase {
 
 					stmt3 = conn.prepareStatement(
 							"create table items (" +
-									" item_id integer primary key " +
-									" generated always as identity (start with 0, increment by 1), " +
-									" name varchar(100), " +
+									" item_id integer primary key, " +
+									" name varchar(50), " +
+									" type varchar(20), " +   // NEW
 									" effect integer, " +
 									" room_id integer" +
 									")"
@@ -123,14 +123,13 @@ public class DerbyDatabase implements IDatabase {
 		});
 	}
 
-	@Override
 	public void loadInitialData() {
 		executeTransaction(new Transaction<Boolean>() {
 			@Override
 			public Boolean execute(Connection conn) throws SQLException {
 				Player player;
 				List<Room> roomList;
-				List<ItemSeed> itemSeeds;
+				List<InitialData.ItemSeed> itemSeeds;
 
 				try {
 					player = InitialData.getPlayer();
@@ -155,6 +154,7 @@ public class DerbyDatabase implements IDatabase {
 					insertPlayer.setInt(5, player.getRoomID());
 					insertPlayer.setString(6, player.getDialog());
 					insertPlayer.executeUpdate();
+
 					System.out.println("Player table populated");
 
 					insertRoom = conn.prepareStatement(
@@ -170,18 +170,22 @@ public class DerbyDatabase implements IDatabase {
 						insertRoom.addBatch();
 					}
 					insertRoom.executeBatch();
+
 					System.out.println("Rooms table populated");
 
 					insertItem = conn.prepareStatement(
-							"insert into items (name, effect, room_id) values (?, ?, ?)"
+							"insert into items (item_id, name, type, effect, room_id) values (?, ?, ?, ?, ?)"
 					);
-					for (ItemSeed seed : itemSeeds) {
-						insertItem.setString(1, seed.getName());
-						insertItem.setInt(2, seed.getEffect());
-						insertItem.setInt(3, seed.getRoomID());
+					for (InitialData.ItemSeed item : itemSeeds) {
+						insertItem.setInt(1, item.getId());
+						insertItem.setString(2, item.getName());
+						insertItem.setString(3, item.getType());
+						insertItem.setInt(4, item.getEffect());
+						insertItem.setInt(5, item.getRoomID());
 						insertItem.addBatch();
 					}
 					insertItem.executeBatch();
+
 					System.out.println("Items table populated");
 
 					return true;
@@ -251,7 +255,8 @@ public class DerbyDatabase implements IDatabase {
 	}
 
 
-	public void loadPlayerInventory(Player player) {
+	@Override
+	public void loadPlayerInventory(final Player player) {
 		executeTransaction(new Transaction<Boolean>() {
 			@Override
 			public Boolean execute(Connection conn) throws SQLException {
@@ -264,9 +269,11 @@ public class DerbyDatabase implements IDatabase {
 
 					while (rs.next()) {
 						Item item = new Item(
+								rs.getInt("item_id"),
 								rs.getString("name"),
+								rs.getString("type"),
 								rs.getInt("effect"),
-								rs.getInt("item_id")
+								rs.getInt("room_id")
 						);
 						player.getInventory().addItem(item);
 					}
@@ -326,14 +333,18 @@ public class DerbyDatabase implements IDatabase {
 					rs = stmt.executeQuery();
 
 					List<Item> items = new ArrayList<Item>();
+
 					while (rs.next()) {
 						Item item = new Item(
+								rs.getInt("item_id"),
 								rs.getString("name"),
+								rs.getString("type"),
 								rs.getInt("effect"),
-								rs.getInt("item_id")
+								rs.getInt("room_id")
 						);
 						items.add(item);
 					}
+
 					return items;
 				} finally {
 					DBUtil.closeQuietly(rs);
@@ -375,16 +386,19 @@ public class DerbyDatabase implements IDatabase {
 					itemRs = itemStmt.executeQuery();
 
 					while (itemRs.next()) {
-						int roomId = itemRs.getInt("room_id");
-						Room room = getRoomById(rooms, roomId);
+						Item item = new Item(
+								itemRs.getInt("item_id"),
+								itemRs.getString("name"),
+								itemRs.getString("type"),
+								itemRs.getInt("effect"),
+								itemRs.getInt("room_id")
+						);
 
-						if (room != null) {
-							Item item = new Item(
-									itemRs.getString("name"),
-									itemRs.getInt("effect"),
-									itemRs.getInt("item_id")
-							);
-							room.getInventory().addItem(item);
+						if (item.getRoomID() > 0) {
+							Room room = getRoomById(rooms, item.getRoomID());
+							if (room != null) {
+								room.getInventory().addItem(item);
+							}
 						}
 					}
 
@@ -400,7 +414,7 @@ public class DerbyDatabase implements IDatabase {
 	}
 
 	@Override
-	public boolean updateItemLocation(final int itemId, final int roomId) {
+	public boolean updateItem(final Item item) {
 		return executeTransaction(new Transaction<Boolean>() {
 			@Override
 			public Boolean execute(Connection conn) throws SQLException {
@@ -408,10 +422,13 @@ public class DerbyDatabase implements IDatabase {
 
 				try {
 					stmt = conn.prepareStatement(
-							"update items set room_id = ? where item_id = ?"
+							"update items set name = ?, type = ?, effect = ?, room_id = ? where item_id = ?"
 					);
-					stmt.setInt(1, roomId);
-					stmt.setInt(2, itemId);
+					stmt.setString(1, item.getName());
+					stmt.setString(2, item.getType());
+					stmt.setInt(3, item.getEffect());
+					stmt.setInt(4, item.getRoomID());
+					stmt.setInt(5, item.getID());
 
 					return stmt.executeUpdate() == 1;
 				} finally {

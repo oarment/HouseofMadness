@@ -14,7 +14,7 @@ public interface IDatabase {
     List<Item> findAllItems();
     List<Room> findFullMap();
     void loadPlayerInventory(Player player);
-    boolean updateItemLocation(int itemId, int roomId);
+    boolean updateItem(Item item);
 
     void createTables();
     void loadInitialData();
