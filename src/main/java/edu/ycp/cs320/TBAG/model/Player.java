@@ -7,6 +7,7 @@ import edu.ycp.cs320.TBAG.model.Inventory;
 public class Player extends Actor {
 	private Integer roomID;
 	private int sanity;
+	private String dialog;
 
     private Inventory inventory;
 
@@ -43,4 +44,11 @@ public class Player extends Actor {
 	}
 	public void setHealth(int hp) {health = hp;}
 	public void setDamage(int dmg) {damage = dmg;}
+	public String getDialog() {
+		return dialog;
+	}
+
+	public void setDialog(String dialog) {
+		this.dialog = dialog;
+	}
 }

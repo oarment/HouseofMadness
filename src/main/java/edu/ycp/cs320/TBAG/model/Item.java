@@ -3,10 +3,12 @@ package edu.ycp.cs320.TBAG.model;
 public class Item {
     private String name;
     private int effect;
+    private int ID;
 
-    public Item(String name, int effect) {
+    public Item(String name, int effect, int ID) {
         this.name = name;
         this.effect = effect;
+        this.ID = ID;
     }
 
     public String getName() {
@@ -24,4 +26,9 @@ public class Item {
     public void setEffect(int effect) {   // 🔥 FIXED naming
         this.effect = effect;
     }
+
+    public void setID(int ID) {this.ID = ID;}
+
+    public int getID() {return ID;}
+
 }
