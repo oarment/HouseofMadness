@@ -1,6 +1,8 @@
 package edu.ycp.cs320.TBAG.model;
 
+
 public class Room {
+
 
     private int roomID;
     private String name;
@@ -8,8 +10,11 @@ public class Room {
     private int southRoomId;
     private int eastRoomId;
     private int westRoomId;
+    private String hint;
+
 
     private Inventory inventory;
+
 
     public Room(int roomID, String name, int northRoomId, int southRoomId, int eastRoomId, int westRoomId) {
         this.roomID = roomID;
@@ -21,31 +26,52 @@ public class Room {
         this.inventory = new Inventory();
     }
 
+
     public Inventory getInventory() {
         return inventory;
     }
+
 
     public int getRoomID() {
         return roomID;
     }
 
+
     public String getName() {
         return name;
     }
+
 
     public int getNorth() {
         return northRoomId;
     }
 
+
     public int getSouth() {
         return southRoomId;
     }
+
 
     public int getEast() {
         return eastRoomId;
     }
 
+
     public int getWest() {
         return westRoomId;
+    }
+
+
+    public String getHint() {
+        // If we do not have a specific hint, tell them the main objective!
+        if (hint == null || hint.isEmpty()) {
+            return "Objective: Survive the darkness, watch your sanity, and escape the Hollow!";
+        }
+        return hint;
+    }
+
+
+    public void setHint(String hint) {
+        this.hint = hint;
     }
 }
