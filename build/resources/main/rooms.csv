@@ -1,8 +1,12 @@
-1|Main Hall Front|4|0|3|2
-2|Lounge|0|0|1|0
-3|Library|0|0|0|1
-4|Main Hall Middle|7|1|5|0
-5|Kitchen|6|0|0|4
-6|Closet|0|5|0|0
-7|Main Hall End|0|4|0|8
-8|Bathroom|0|0|7|0
+1|Foyer|4|0|2|3
+2|Coat Room|0|0|0|1
+3|Creepy Nursery|6|0|1|0
+4|Grand Hallway|7|1|5|6
+5|Dining Room|8|0|0|4
+6|Conservatory|0|3|4|0
+7|The Meat Locker|10|4|8|9
+8|Kitchen|11|5|0|7
+9|Wine Cellar|12|0|7|0
+10|Boiler Room|0|7|11|12
+11|Servant's Quarters|0|8|0|10
+12|Attic Stairs|0|9|10|0
