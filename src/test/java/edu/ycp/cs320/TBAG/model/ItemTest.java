@@ -1,47 +1,32 @@
-/*package edu.ycp.cs320.TBAG.model;
+package edu.ycp.cs320.TBAG.model;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ItemTest {
+    private Item potion;
 
-    @Test
-    public void testConstructorAndGetters() {
-        Item item = new Item("Potion", "health", 20);
-
-        assertEquals("Potion", item.getName());
-        assertEquals("health", item.getType());
-        assertEquals(20, item.getEffect());
+    @BeforeEach
+    public void setUp() {
+        potion = new Item("Health Potion", 25, 100);
     }
 
     @Test
-    public void testSetName() {
-        Item item = new Item("Potion", "health", 20);
-
-        item.setName("Super Potion");
-
-        assertEquals("Super Potion", item.getName());
+    public void testGetters() {
+        assertEquals("Health Potion", potion.getName());
+        assertEquals(25, potion.getEffect());
+        assertEquals(100, potion.getID());
     }
 
     @Test
-    public void testSetEffect() {
-        Item item = new Item("Potion", "health", 20);
+    public void testSetters() {
+        potion.setName("Poison");
+        potion.setEffect(-10);
+        potion.setID(999);
 
-        item.setEffect(50);
-
-        assertEquals(50, item.getEffect());
-    }
-
-    @Test
-    public void testDifferentItemTypes() {
-        Item weapon = new Item("Knife", "weapon", 3);
-        Item sanityItem = new Item("Pills", "sanity", 10);
-
-        assertEquals("weapon", weapon.getType());
-        assertEquals(3, weapon.getEffect());
-
-        assertEquals("sanity", sanityItem.getType());
-        assertEquals(10, sanityItem.getEffect());
+        assertEquals("Poison", potion.getName());
+        assertEquals(-10, potion.getEffect());
+        assertEquals(999, potion.getID());
     }
 }
-*/

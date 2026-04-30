@@ -1,41 +1,42 @@
-/*package edu.ycp.cs320.TBAG.model;
+package edu.ycp.cs320.TBAG.model;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class InventoryTest {
+    private Inventory inventory;
+    private Item key;
+    private Item potion;
+
+    @BeforeEach
+    public void setUp() {
+        inventory = new Inventory();
+        key = new Item("Rusty Key", 0, 1);
+        potion = new Item("Health Potion", 25, 2);
+    }
 
     @Test
-    public void testAddItem() {
-        Inventory inv = new Inventory();
-        Item item = new Item("Potion", "health", 20);
+    public void testAddAndSize() {
+        assertTrue(inventory.isEmpty());
 
-        inv.addItem(item);
+        inventory.addItem(key);
+        inventory.addItem(potion);
 
-        assertEquals(1, inv.getSize());
-        assertEquals("Potion", inv.getItems().get(0).getName());
+        assertFalse(inventory.isEmpty());
+        assertEquals(2, inventory.getSize());
+        assertTrue(inventory.getItems().contains(key));
     }
 
     @Test
     public void testRemoveItem() {
-        Inventory inv = new Inventory();
-        Item item = new Item("Potion", "health", 20);
+        inventory.addItem(key);
+        inventory.addItem(potion);
 
-        inv.addItem(item);
-        inv.removeItem(item);
+        inventory.removeItem(key);
 
-        assertTrue(inv.isEmpty());
-    }
-
-    @Test
-    public void testIsEmpty() {
-        Inventory inv = new Inventory();
-
-        assertTrue(inv.isEmpty());
-
-        inv.addItem(new Item("Knife", "weapon", 3));
-
-        assertFalse(inv.isEmpty());
+        assertEquals(1, inventory.getSize());
+        assertFalse(inventory.getItems().contains(key));
+        assertTrue(inventory.getItems().contains(potion));
     }
 }
-*/
