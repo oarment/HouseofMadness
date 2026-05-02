@@ -8,6 +8,11 @@ public class Room {
     private int southRoomId;
     private int eastRoomId;
     private int westRoomId;
+    private String hint;
+
+    // === PUZZLE VARIABLES ===
+    private boolean isLocked;
+    private String requiredItem;
 
     private Inventory inventory;
 
@@ -19,6 +24,10 @@ public class Room {
         this.eastRoomId = eastRoomId;
         this.westRoomId = westRoomId;
         this.inventory = new Inventory();
+
+        // Default to unlocked
+        this.isLocked = false;
+        this.requiredItem = "";
     }
 
     public Inventory getInventory() {
@@ -31,6 +40,11 @@ public class Room {
 
     public String getName() {
         return name;
+    }
+
+    // === MISSING SETTER ADDED ===
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getNorth() {
@@ -47,5 +61,33 @@ public class Room {
 
     public int getWest() {
         return westRoomId;
+    }
+
+    public String getHint() {
+        if (hint == null || hint.isEmpty()) {
+            return "Objective: Survive the darkness, watch your sanity, and escape the Hollow!";
+        }
+        return hint;
+    }
+
+    public void setHint(String hint) {
+        this.hint = hint;
+    }
+
+    // === PUZZLE GETTERS & SETTERS ===
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void setLocked(boolean locked) {
+        isLocked = locked;
+    }
+
+    public String getRequiredItem() {
+        return requiredItem;
+    }
+
+    public void setRequiredItem(String requiredItem) {
+        this.requiredItem = requiredItem;
     }
 }

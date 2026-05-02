@@ -39,7 +39,6 @@ public class TBAGServlet extends HttpServlet {
 
 			engine.loadMapFromDatabase();
 			db.loadPlayerInventory(player);
-
 			session.setAttribute("engine", engine);
 		}
 
@@ -81,8 +80,21 @@ public class TBAGServlet extends HttpServlet {
 
 		String result = engine.processCommand(command);
 
-		dialog += command + "\n";
+		// Added a ">" so your typed commands stand out in the text log!
+		dialog += "\n> " + command + "\n";
 		dialog += result;
+
+		// === THE FIX: PREVENT DATABASE CRASH ===
+		// If the dialog log gets too massive, we chop off the oldest text at the top
+		if (dialog.length() > 2800) {
+			dialog = dialog.substring(dialog.length() - 2800);
+
+			// We find the first newline character so we don't accidentally cut a word in half!
+			int cutIndex = dialog.indexOf('\n');
+			if (cutIndex != -1) {
+				dialog = dialog.substring(cutIndex + 1);
+			}
+		}
 
 		engine.getPlayer().setDialog(dialog);
 		db.updatePlayer(engine.getPlayer());
@@ -91,8 +103,6 @@ public class TBAGServlet extends HttpServlet {
 		req.setAttribute("location", engine.getCurrentLocation());
 		req.setAttribute("dialog", dialog);
 		req.setAttribute("roomItems", engine.getRoomItems());
-
-		session.setAttribute("engine", engine);
 
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 	}

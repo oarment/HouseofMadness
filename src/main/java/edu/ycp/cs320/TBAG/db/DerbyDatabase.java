@@ -12,7 +12,6 @@ import java.util.List;
 
 public class DerbyDatabase implements IDatabase {
 
-
 	private interface Transaction<ResultType> {
 		ResultType execute(Connection conn) throws SQLException;
 	}
@@ -88,6 +87,7 @@ public class DerbyDatabase implements IDatabase {
 					stmt1.executeUpdate();
 					System.out.println("Player table created");
 
+					// === UPDATED SCHEMA FOR PUZZLES ===
 					stmt2 = conn.prepareStatement(
 							"create table rooms (" +
 									" room_id integer primary key, " +
@@ -95,7 +95,9 @@ public class DerbyDatabase implements IDatabase {
 									" north_id integer, " +
 									" south_id integer, " +
 									" east_id integer, " +
-									" west_id integer" +
+									" west_id integer, " +
+									" is_locked integer, " +
+									" required_item varchar(100)" +
 									")"
 					);
 					stmt2.executeUpdate();
@@ -154,11 +156,12 @@ public class DerbyDatabase implements IDatabase {
 					insertPlayer.setInt(5, player.getRoomID());
 					insertPlayer.setString(6, player.getDialog());
 					insertPlayer.executeUpdate();
-
 					System.out.println("Player table populated");
 
+
+					// === UPDATED FOR LOCKS ===
 					insertRoom = conn.prepareStatement(
-							"insert into rooms (room_id, name, north_id, south_id, east_id, west_id) values (?, ?, ?, ?, ?, ?)"
+							"insert into rooms (room_id, name, north_id, south_id, east_id, west_id, is_locked, required_item) values (?, ?, ?, ?, ?, ?, 0, '')"
 					);
 					for (Room room : roomList) {
 						insertRoom.setInt(1, room.getRoomID());
@@ -172,6 +175,7 @@ public class DerbyDatabase implements IDatabase {
 					insertRoom.executeBatch();
 
 					System.out.println("Rooms table populated");
+
 
 					insertItem = conn.prepareStatement(
 							"insert into items (item_id, name, type, effect, room_id) values (?, ?, ?, ?, ?)"
@@ -187,6 +191,7 @@ public class DerbyDatabase implements IDatabase {
 					insertItem.executeBatch();
 
 					System.out.println("Items table populated");
+
 
 					return true;
 				} finally {
@@ -255,8 +260,12 @@ public class DerbyDatabase implements IDatabase {
 	}
 
 
+
 	@Override
-	public void loadPlayerInventory(final Player player) {
+
+
+	public void loadPlayerInventory(Player player) {
+
 		executeTransaction(new Transaction<Boolean>() {
 			@Override
 			public Boolean execute(Connection conn) throws SQLException {
@@ -379,6 +388,10 @@ public class DerbyDatabase implements IDatabase {
 								roomRs.getInt("east_id"),
 								roomRs.getInt("west_id")
 						);
+						// === PULL LOCKS FROM DATABASE ===
+						room.setLocked(roomRs.getInt("is_locked") == 1);
+						room.setRequiredItem(roomRs.getString("required_item"));
+
 						rooms.add(room);
 					}
 
@@ -438,6 +451,91 @@ public class DerbyDatabase implements IDatabase {
 		});
 	}
 
+	// ==========================================
+	// === NEW GAME GENERATOR SYSTEM ===
+	// ==========================================
+	@Override
+	public void resetGame() {
+		executeTransaction(new Transaction<Boolean>() {
+			@Override
+			public Boolean execute(Connection conn) throws SQLException {
+				PreparedStatement delPlayer = null;
+				PreparedStatement delRooms = null;
+				PreparedStatement delItems = null;
+				PreparedStatement insertPlayer = null;
+				PreparedStatement insertRoom = null;
+				PreparedStatement insertItem = null;
+
+				try {
+					delPlayer = conn.prepareStatement("delete from player");
+					delPlayer.executeUpdate();
+					delRooms = conn.prepareStatement("delete from rooms");
+					delRooms.executeUpdate();
+					delItems = conn.prepareStatement("delete from items");
+					delItems.executeUpdate();
+
+					List<Room> newMap = edu.ycp.cs320.TBAG.controller.MapGenerator.generateRandomMap();
+					edu.ycp.cs320.TBAG.controller.MapGenerator.populateItems(newMap);
+
+					insertPlayer = conn.prepareStatement(
+							"insert into player (player_id, health, sanity, damage, room_id, dialog) values (?, ?, ?, ?, ?, ?)"
+					);
+					insertPlayer.setInt(1, 1);
+					insertPlayer.setInt(2, 100);
+					insertPlayer.setInt(3, 100);
+					insertPlayer.setInt(4, 10);
+					insertPlayer.setInt(5, 1);
+					insertPlayer.setString(6, "You awaken in a strange, shifting mansion...\n");
+					insertPlayer.executeUpdate();
+
+					insertRoom = conn.prepareStatement(
+							"insert into rooms (room_id, name, north_id, south_id, east_id, west_id, is_locked, required_item) values (?, ?, ?, ?, ?, ?, ?, ?)"
+					);
+					for (Room room : newMap) {
+						insertRoom.setInt(1, room.getRoomID());
+						insertRoom.setString(2, room.getName());
+						insertRoom.setInt(3, room.getNorth());
+						insertRoom.setInt(4, room.getSouth());
+						insertRoom.setInt(5, room.getEast());
+						insertRoom.setInt(6, room.getWest());
+						insertRoom.setInt(7, room.isLocked() ? 1 : 0);
+						insertRoom.setString(8, room.getRequiredItem() == null ? "" : room.getRequiredItem());
+						insertRoom.addBatch();
+					}
+					insertRoom.executeBatch();
+
+					insertItem = conn.prepareStatement(
+							"insert into items (name, effect, room_id) values (?, ?, ?)"
+					);
+					for (Room room : newMap) {
+						for (Item item : room.getInventory().getItems()) {
+							insertItem.setString(1, item.getName());
+							insertItem.setInt(2, item.getEffect());
+							insertItem.setInt(3, room.getRoomID());
+							insertItem.addBatch();
+						}
+					}
+					insertItem.executeBatch();
+
+					// === NEW: Secretly inject the Rusty Key into Room -3 (Limbo) ===
+					insertItem.setString(1, "Rusty Key");
+					insertItem.setInt(2, 0);
+					insertItem.setInt(3, -3);
+					insertItem.executeUpdate();
+
+					return true;
+				} finally {
+					DBUtil.closeQuietly(delPlayer);
+					DBUtil.closeQuietly(delRooms);
+					DBUtil.closeQuietly(delItems);
+					DBUtil.closeQuietly(insertPlayer);
+					DBUtil.closeQuietly(insertRoom);
+					DBUtil.closeQuietly(insertItem);
+				}
+			}
+		});
+	}
+
 	private Room getRoomById(List<Room> rooms, int id) {
 		for (Room room : rooms) {
 			if (room.getRoomID() == id) {
@@ -445,48 +543,6 @@ public class DerbyDatabase implements IDatabase {
 			}
 		}
 		return null;
-	}
-	private static class DriverShim implements Driver {
-		private final Driver driver;
-
-		DriverShim(Driver driver) {
-			this.driver = driver;
-		}
-
-		@Override
-		public Connection connect(String url, java.util.Properties info) throws SQLException {
-			return driver.connect(url, info);
-		}
-
-		@Override
-		public boolean acceptsURL(String url) throws SQLException {
-			return driver.acceptsURL(url);
-		}
-
-		@Override
-		public DriverPropertyInfo[] getPropertyInfo(String url, java.util.Properties info) throws SQLException {
-			return driver.getPropertyInfo(url, info);
-		}
-
-		@Override
-		public int getMajorVersion() {
-			return driver.getMajorVersion();
-		}
-
-		@Override
-		public int getMinorVersion() {
-			return driver.getMinorVersion();
-		}
-
-		@Override
-		public boolean jdbcCompliant() {
-			return driver.jdbcCompliant();
-		}
-
-		@Override
-		public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
-			return driver.getParentLogger();
-		}
 	}
 
 	public static void main(String[] args) throws IOException {

@@ -18,4 +18,7 @@ public interface IDatabase {
 
     void createTables();
     void loadInitialData();
+
+    // === NEW METHOD ===
+    void resetGame();
 }
