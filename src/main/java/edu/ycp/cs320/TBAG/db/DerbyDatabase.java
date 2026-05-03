@@ -505,22 +505,29 @@ public class DerbyDatabase implements IDatabase {
 					insertRoom.executeBatch();
 
 					insertItem = conn.prepareStatement(
-							"insert into items (name, effect, room_id) values (?, ?, ?)"
+							"insert into items (item_id, name, type, effect, room_id) values (?, ?, ?, ?, ?)"
 					);
+
 					for (Room room : newMap) {
 						for (Item item : room.getInventory().getItems()) {
-							insertItem.setString(1, item.getName());
-							insertItem.setInt(2, item.getEffect());
-							insertItem.setInt(3, room.getRoomID());
+							item.setRoomID(room.getRoomID());
+
+							insertItem.setInt(1, item.getID());
+							insertItem.setString(2, item.getName());
+							insertItem.setString(3, item.getType());
+							insertItem.setInt(4, item.getEffect());
+							insertItem.setInt(5, item.getRoomID());
 							insertItem.addBatch();
 						}
 					}
 					insertItem.executeBatch();
 
-					// === NEW: Secretly inject the Rusty Key into Room -3 (Limbo) ===
-					insertItem.setString(1, "Rusty Key");
-					insertItem.setInt(2, 0);
-					insertItem.setInt(3, -3);
+					Item rustyKey = new Item(999, "Rusty Key", "key", 0, -3);
+					insertItem.setInt(1, rustyKey.getID());
+					insertItem.setString(2, rustyKey.getName());
+					insertItem.setString(3, rustyKey.getType());
+					insertItem.setInt(4, rustyKey.getEffect());
+					insertItem.setInt(5, rustyKey.getRoomID());
 					insertItem.executeUpdate();
 
 					return true;

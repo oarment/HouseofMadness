@@ -60,30 +60,39 @@ public class MapGenerator {
         Random rand = new Random();
         int[] safeRooms = {1, 2, 3, 7, 8, 9};
 
-        // 1. Place the Puzzle Box
+        int nextItemId = 100;
+
         int boxRoomId = safeRooms[rand.nextInt(safeRooms.length)];
-        Item box = new Item("Puzzle Box", 0, 100);
+        Item box = new Item(nextItemId++, "Puzzle Box", "puzzle", 0, boxRoomId);
         map.get(boxRoomId - 1).getInventory().addItem(box);
 
-        // 2. Generate a random 4-digit PIN and hide it in the Torn Note
         int pinCode = 1000 + rand.nextInt(9000);
         int noteRoomId = safeRooms[rand.nextInt(safeRooms.length)];
-        Item note = new Item("Torn Note", pinCode, 101);
+        Item note = new Item(nextItemId++, "Torn Note", "note", pinCode, noteRoomId);
         map.get(noteRoomId - 1).getInventory().addItem(note);
 
-        // 3. Randomize Consumable Loot
-        // Guarantee at least 1 of each spawns in the house
-        map.get(rand.nextInt(12)).getInventory().addItem(new Item("Health Potion", 25, 102));
-        map.get(rand.nextInt(12)).getInventory().addItem(new Item("Sanity Pills", 15, 103));
+        int healthRoomId = rand.nextInt(12) + 1;
+        map.get(healthRoomId - 1).getInventory().addItem(
+                new Item(nextItemId++, "Health Potion", "health", 25, healthRoomId)
+        );
 
-        // 25% chance for each room to spawn an extra item
-        int extraId = 104;
+        int sanityRoomId = rand.nextInt(12) + 1;
+        map.get(sanityRoomId - 1).getInventory().addItem(
+                new Item(nextItemId++, "Sanity Pills", "sanity", 15, sanityRoomId)
+        );
+
         for (int i = 0; i < 12; i++) {
-            if (rand.nextDouble() < 0.25) { // 25% chance
+            if (rand.nextDouble() < 0.25) {
+                int roomId = i + 1;
+
                 if (rand.nextBoolean()) {
-                    map.get(i).getInventory().addItem(new Item("Health Potion", 25, extraId++));
+                    map.get(i).getInventory().addItem(
+                            new Item(nextItemId++, "Health Potion", "health", 25, roomId)
+                    );
                 } else {
-                    map.get(i).getInventory().addItem(new Item("Sanity Pills", 15, extraId++));
+                    map.get(i).getInventory().addItem(
+                            new Item(nextItemId++, "Sanity Pills", "sanity", 15, roomId)
+                    );
                 }
             }
         }

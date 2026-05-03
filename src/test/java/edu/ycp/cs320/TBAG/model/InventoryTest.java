@@ -12,8 +12,8 @@ public class InventoryTest {
     @BeforeEach
     public void setUp() {
         inventory = new Inventory();
-        key = new Item("Rusty Key", 0, 1);
-        potion = new Item("Health Potion", 25, 2);
+        key = new Item(1, "Rusty Key", "key", 0, -1);
+        potion = new Item(2, "Health Potion", "health", 25, -1);
     }
 
     @Test

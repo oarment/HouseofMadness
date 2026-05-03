@@ -39,12 +39,28 @@ public class TBAGServlet extends HttpServlet {
 
 			engine.loadMapFromDatabase();
 			db.loadPlayerInventory(player);
+
 			session.setAttribute("engine", engine);
 		}
 
 		return engine;
 	}
 
+	private void setCommonAttributes(HttpServletRequest req, GameEngine engine) {
+		req.setAttribute("player", engine.getPlayer());
+		req.setAttribute("location", engine.getCurrentLocation());
+		req.setAttribute("dialog", engine.getPlayer().getDialog());
+		req.setAttribute("roomItems", engine.getRoomItems());
+
+		req.setAttribute("canGoNorth", engine.canGoNorth());
+		req.setAttribute("canGoSouth", engine.canGoSouth());
+		req.setAttribute("canGoEast", engine.canGoEast());
+		req.setAttribute("canGoWest", engine.canGoWest());
+
+		req.setAttribute("inCombat", engine.isInCombat());
+		req.setAttribute("monsterName", engine.getCurrentMonsterName());
+		req.setAttribute("monsterImage", engine.getCurrentMonsterImage());
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -53,10 +69,7 @@ public class TBAGServlet extends HttpServlet {
 		HttpSession session = req.getSession();
 		GameEngine engine = initializeEngine(session);
 
-		req.setAttribute("player", engine.getPlayer());
-		req.setAttribute("location", engine.getCurrentLocation());
-		req.setAttribute("dialog", engine.getPlayer().getDialog());
-		req.setAttribute("roomItems", engine.getRoomItems());
+		setCommonAttributes(req, engine);
 
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 	}
@@ -69,7 +82,7 @@ public class TBAGServlet extends HttpServlet {
 		GameEngine engine = initializeEngine(session);
 
 		String command = req.getParameter("command");
-		String dialog = req.getParameter("dialog");
+		String dialog = engine.getPlayer().getDialog();
 
 		if (dialog == null) {
 			dialog = "";
@@ -80,29 +93,15 @@ public class TBAGServlet extends HttpServlet {
 
 		String result = engine.processCommand(command);
 
-		// Added a ">" so your typed commands stand out in the text log!
-		dialog += "\n> " + command + "\n";
-		dialog += result;
-
-		// === THE FIX: PREVENT DATABASE CRASH ===
-		// If the dialog log gets too massive, we chop off the oldest text at the top
-		if (dialog.length() > 2800) {
-			dialog = dialog.substring(dialog.length() - 2800);
-
-			// We find the first newline character so we don't accidentally cut a word in half!
-			int cutIndex = dialog.indexOf('\n');
-			if (cutIndex != -1) {
-				dialog = dialog.substring(cutIndex + 1);
-			}
-		}
+		dialog += command + "\n";
+		dialog += result + "\n";
 
 		engine.getPlayer().setDialog(dialog);
 		db.updatePlayer(engine.getPlayer());
 
-		req.setAttribute("player", engine.getPlayer());
-		req.setAttribute("location", engine.getCurrentLocation());
-		req.setAttribute("dialog", dialog);
-		req.setAttribute("roomItems", engine.getRoomItems());
+		setCommonAttributes(req, engine);
+
+		session.setAttribute("engine", engine);
 
 		req.getRequestDispatcher("/_view/tbag.jsp").forward(req, resp);
 	}

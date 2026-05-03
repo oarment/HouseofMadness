@@ -37,7 +37,7 @@ public class GameEngineTest {
 		engine.setMap(map);
 
 		// 2. Put a key on the floor of the start room
-		Item key = new Item("Rusty Key", 0, 100);
+		Item key = new Item(0, "Rusty Key", "key", 0, 1);
 		startRoom.getInventory().addItem(key);
 
 		// 3. Setup the Player
@@ -55,6 +55,12 @@ public class GameEngineTest {
 			public List<Item> findAllItems() { return null; }
 			public List<Room> findFullMap() { return null; }
 			public void loadPlayerInventory(Player p) {}
+
+			@Override
+			public boolean updateItem(Item item) {
+				return false;
+			}
+
 			public boolean updateItemLocation(int itemId, int roomId) { return true; }
 			public void createTables() {}
 			public void loadInitialData() {}

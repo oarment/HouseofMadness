@@ -9,24 +9,30 @@ public class ItemTest {
 
     @BeforeEach
     public void setUp() {
-        potion = new Item("Health Potion", 25, 100);
+        potion = new Item(100, "Health Potion", "health", 25, 2);
     }
 
     @Test
     public void testGetters() {
-        assertEquals("Health Potion", potion.getName());
-        assertEquals(25, potion.getEffect());
         assertEquals(100, potion.getID());
+        assertEquals("Health Potion", potion.getName());
+        assertEquals("health", potion.getType());
+        assertEquals(25, potion.getEffect());
+        assertEquals(2, potion.getRoomID());
     }
 
     @Test
     public void testSetters() {
-        potion.setName("Poison");
-        potion.setEffect(-10);
         potion.setID(999);
+        potion.setName("Poison");
+        potion.setType("health");
+        potion.setEffect(-10);
+        potion.setRoomID(-1);
 
-        assertEquals("Poison", potion.getName());
-        assertEquals(-10, potion.getEffect());
         assertEquals(999, potion.getID());
+        assertEquals("Poison", potion.getName());
+        assertEquals("health", potion.getType());
+        assertEquals(-10, potion.getEffect());
+        assertEquals(-1, potion.getRoomID());
     }
 }

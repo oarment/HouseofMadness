@@ -47,10 +47,27 @@ public class DerbyDatabaseTest {
         List<Item> items = db.findAllItems();
 
         assertNotNull(items);
-        assertEquals(3, items.size());
-        assertTrue(items.stream().anyMatch(i -> i.getName().equalsIgnoreCase("Flashlight")));
-        assertTrue(items.stream().anyMatch(i -> i.getName().equalsIgnoreCase("keys")));
-        assertTrue(items.stream().anyMatch(i -> i.getName().equalsIgnoreCase("Potion")));
+        assertEquals(5, items.size());
+
+        assertTrue(items.stream().anyMatch(i ->
+                i.getName().equalsIgnoreCase("Rusty Key")
+                        && i.getType().equalsIgnoreCase("key")));
+
+        assertTrue(items.stream().anyMatch(i ->
+                i.getName().equalsIgnoreCase("Health Potion")
+                        && i.getType().equalsIgnoreCase("health")));
+
+        assertTrue(items.stream().anyMatch(i ->
+                i.getName().equalsIgnoreCase("Crowbar")
+                        && i.getType().equalsIgnoreCase("utility")));
+
+        assertTrue(items.stream().anyMatch(i ->
+                i.getName().equalsIgnoreCase("Sanity Pills")
+                        && i.getType().equalsIgnoreCase("sanity")));
+
+        assertTrue(items.stream().anyMatch(i ->
+                i.getName().equalsIgnoreCase("Silver Locket")
+                        && i.getType().equalsIgnoreCase("utility")));
     }
 
     @Test
@@ -62,17 +79,29 @@ public class DerbyDatabaseTest {
 
         Room room1 = map.stream().filter(r -> r.getRoomID() == 1).findFirst().orElse(null);
         Room room2 = map.stream().filter(r -> r.getRoomID() == 2).findFirst().orElse(null);
-        Room room4 = map.stream().filter(r -> r.getRoomID() == 4).findFirst().orElse(null);
+        Room room3 = map.stream().filter(r -> r.getRoomID() == 3).findFirst().orElse(null);
+        Room room6 = map.stream().filter(r -> r.getRoomID() == 6).findFirst().orElse(null);
+        Room room8 = map.stream().filter(r -> r.getRoomID() == 8).findFirst().orElse(null);
 
         assertNotNull(room1);
         assertNotNull(room2);
-        assertNotNull(room4);
+        assertNotNull(room3);
+        assertNotNull(room6);
+        assertNotNull(room8);
 
         assertTrue(room1.getInventory().getItems().stream()
-                .anyMatch(i -> i.getName().equalsIgnoreCase("Flashlight")));
+                .anyMatch(i -> i.getName().equalsIgnoreCase("Rusty Key")));
+
         assertTrue(room2.getInventory().getItems().stream()
-                .anyMatch(i -> i.getName().equalsIgnoreCase("keys")));
-        assertTrue(room4.getInventory().getItems().stream()
-                .anyMatch(i -> i.getName().equalsIgnoreCase("Potion")));
+                .anyMatch(i -> i.getName().equalsIgnoreCase("Health Potion")));
+
+        assertTrue(room3.getInventory().getItems().stream()
+                .anyMatch(i -> i.getName().equalsIgnoreCase("Crowbar")));
+
+        assertTrue(room6.getInventory().getItems().stream()
+                .anyMatch(i -> i.getName().equalsIgnoreCase("Sanity Pills")));
+
+        assertTrue(room8.getInventory().getItems().stream()
+                .anyMatch(i -> i.getName().equalsIgnoreCase("Silver Locket")));
     }
 }

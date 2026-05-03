@@ -109,9 +109,6 @@ public class GameEngine {
 			case "equip":
 				return equipItemByName(command);
 
-			case "use":
-				return useItemByName(command);
-
 			case "show":
 				if (command.equals("show inventory")) {
 					return showInventory();
@@ -168,8 +165,8 @@ public class GameEngine {
 
 				if (enteredCode.equals(String.valueOf(actualCode))) {
 					player.getInventory().removeItem(puzzleBox);
-					db.updateItemLocation(puzzleBox.getID(), -2);
-
+					puzzleBox.setRoomID(-2);
+					db.updateItem(puzzleBox);
 					Item rustyKey = null;
 					for (Item item : db.findAllItems()) {
 						if (item.getName().equalsIgnoreCase("Rusty Key")) {
@@ -180,7 +177,8 @@ public class GameEngine {
 
 					if (rustyKey != null) {
 						player.getInventory().addItem(rustyKey);
-						db.updateItemLocation(rustyKey.getID(), -1);
+						rustyKey.setRoomID(-1);
+						db.updateItem(rustyKey);
 						return "CLICK! The combination works! The box springs open, revealing a Rusty Key inside! You throw the empty box away.\n";
 					}
 				} else {
@@ -281,24 +279,36 @@ public class GameEngine {
 			}
 		}
 
-		if (itemToUse.getEffect() > 0) {
-			String itemNameLower = itemToUse.getName().toLowerCase();
-			if (itemNameLower.contains("sanity") || itemNameLower.contains("pill")) {
-				int newSanity = player.getSanity() + itemToUse.getEffect();
-				if (newSanity > 100) newSanity = 100;
-				player.setSanity(newSanity);
-				player.getInventory().removeItem(itemToUse);
-				db.updateItemLocation(itemToUse.getID(), -2);
-				return "You consumed the " + itemToUse.getName() + " and restored " + itemToUse.getEffect() + " sanity!\n";
-			} else {
-				int newHealth = player.getHealth() + itemToUse.getEffect();
-				if (newHealth > 100) newHealth = 100;
-				player.setHealth(newHealth);
-				player.getInventory().removeItem(itemToUse);
-				db.updateItemLocation(itemToUse.getID(), -2);
-				return "You consumed the " + itemToUse.getName() + " and restored " + itemToUse.getEffect() + " health!\n";
-			}
+		if (itemToUse.getType().equalsIgnoreCase("sanity")) {
+			int newSanity = Math.min(100, player.getSanity() + itemToUse.getEffect());
+			player.setSanity(newSanity);
+
+			player.getInventory().removeItem(itemToUse);
+			itemToUse.setRoomID(-999);
+
+			db.updatePlayer(player);
+			db.updateItem(itemToUse);
+
+			return "You consumed the " + itemToUse.getName()
+					+ " and restored " + itemToUse.getEffect()
+					+ " sanity! Sanity is now " + player.getSanity() + ".\n";
 		}
+
+		if (itemToUse.getType().equalsIgnoreCase("health")) {
+			int newHealth = Math.min(100, player.getHealth() + itemToUse.getEffect());
+			player.setHealth(newHealth);
+
+			player.getInventory().removeItem(itemToUse);
+			itemToUse.setRoomID(-999);
+
+			db.updatePlayer(player);
+			db.updateItem(itemToUse);
+
+			return "You consumed the " + itemToUse.getName()
+					+ " and restored " + itemToUse.getEffect()
+					+ " health! Health is now " + player.getHealth() + ".\n";
+			}
+
 
 		return "You can't use that here.\n";
 	}
@@ -320,7 +330,6 @@ public class GameEngine {
 		item.setRoomID(-1);
 		db.updateItem(item);
 
-		db.updateItemLocation(item.getID(), -1);
 
 
 		return "You picked up " + item.getName() + ".\n";
@@ -364,9 +373,6 @@ public class GameEngine {
 
 				item.setRoomID(player.getRoomID());
 				db.updateItem(item);
-
-
-				db.updateItemLocation(item.getID(), player.getRoomID());
 
 				return "You dropped " + item.getName() + ".\n";
 			}
@@ -446,6 +452,44 @@ public class GameEngine {
 		}
 
 		return "You don't have that item.\n";
+	}
+	public boolean canGoNorth() {
+		Room room = getRoomById(player.getRoomID());
+		return room != null && room.getNorth() != 0;
+	}
+
+	public boolean canGoSouth() {
+		Room room = getRoomById(player.getRoomID());
+		return room != null && room.getSouth() != 0;
+	}
+
+	public boolean canGoEast() {
+		Room room = getRoomById(player.getRoomID());
+		return room != null && room.getEast() != 0;
+	}
+
+	public boolean canGoWest() {
+		Room room = getRoomById(player.getRoomID());
+		return room != null && room.getWest() != 0;
+	}
+
+	public boolean isInCombat() {
+		return getMonsterInCurrentRoom() != null;
+	}
+
+	public String getCurrentMonsterName() {
+		Monster monster = getMonsterInCurrentRoom();
+		return monster != null ? monster.getName() : "";
+	}
+
+	public String getCurrentMonsterImage() {
+		Monster monster = getMonsterInCurrentRoom();
+
+		if (monster == null) {
+			return "";
+		}
+
+		return monster.getName().toLowerCase().replace(" ", "_") + ".png";
 	}
 
 }
