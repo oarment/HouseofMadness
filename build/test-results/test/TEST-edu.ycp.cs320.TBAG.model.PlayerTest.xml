@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="edu.ycp.cs320.TBAG.model.PlayerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-04T19:51:05.501Z" hostname="DESKTOP-7TL0CB2" time="0.008">
+  <properties/>
+  <testcase name="testSanityAndHealthUpdates()" classname="edu.ycp.cs320.TBAG.model.PlayerTest" time="0.002"/>
+  <testcase name="testDialogStorage()" classname="edu.ycp.cs320.TBAG.model.PlayerTest" time="0.002"/>
+  <testcase name="testDefaultConstructor()" classname="edu.ycp.cs320.TBAG.model.PlayerTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

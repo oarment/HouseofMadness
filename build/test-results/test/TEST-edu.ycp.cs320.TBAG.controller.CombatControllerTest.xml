@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="edu.ycp.cs320.TBAG.controller.CombatControllerTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-05-04T19:51:05.410Z" hostname="DESKTOP-7TL0CB2" time="0.017">
+  <properties/>
+  <testcase name="testNormalCombatExchangeHealthDamage()" classname="edu.ycp.cs320.TBAG.controller.CombatControllerTest" time="0.003"/>
+  <testcase name="testNormalCombatExchangeSanityDamage()" classname="edu.ycp.cs320.TBAG.controller.CombatControllerTest" time="0.001"/>
+  <testcase name="testPlayerKillsMonster()" classname="edu.ycp.cs320.TBAG.controller.CombatControllerTest" time="0.001"/>
+  <testcase name="testPlayerDiesFromHealthDamage()" classname="edu.ycp.cs320.TBAG.controller.CombatControllerTest" time="0.001"/>
+  <testcase name="testPlayerGoesInsane()" classname="edu.ycp.cs320.TBAG.controller.CombatControllerTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

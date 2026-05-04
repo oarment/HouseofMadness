@@ -392,9 +392,8 @@ public class GameEngine {
 
 		String result = "Your Inventory:\n";
 		for (Item item : player.getInventory().getItems()) {
-			result += "- " + item.getName() + "|" + item.getType() + "|" + item.getEffect() + "\n";
+			result += "- " + item.getName() + "|" + item.getType() + "\n";
 		}
-		result += "Current damage: " + player.getDamage() + "\n";
 		return result;
 	}
 

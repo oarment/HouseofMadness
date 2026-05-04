@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="edu.ycp.cs320.TBAG.model.RoomTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-04T19:51:05.511Z" hostname="DESKTOP-7TL0CB2" time="0.004">
+  <properties/>
+  <testcase name="testRoomInventory()" classname="edu.ycp.cs320.TBAG.model.RoomTest" time="0.001"/>
+  <testcase name="testRoomDirections()" classname="edu.ycp.cs320.TBAG.model.RoomTest" time="0.001"/>
+  <testcase name="testLockingMechanics()" classname="edu.ycp.cs320.TBAG.model.RoomTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

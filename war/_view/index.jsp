@@ -16,7 +16,6 @@
         h1 {
             font-size: 48px;
             margin-bottom: 20px;
-            color: #00ff1e;
         }
 
         .subtitle {
@@ -50,7 +49,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            color: gray;
         }
 
         .room-preview img {
@@ -77,7 +75,8 @@
     </form>
 
     <div class="room-preview">
-        <img src="${pageContext.request.contextPath}/static/images/rooms/${lastRoomImage}" alt="${lastRoomName}" />
+        <img src="${pageContext.request.contextPath}/static/images/rooms/${lastRoomImage}"
+             alt="${lastRoomName}" />
     </div>
 
     <div class="room-label">
