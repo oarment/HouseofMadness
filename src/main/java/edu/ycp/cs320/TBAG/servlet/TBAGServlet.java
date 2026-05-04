@@ -60,6 +60,10 @@ public class TBAGServlet extends HttpServlet {
 		req.setAttribute("inCombat", engine.isInCombat());
 		req.setAttribute("monsterName", engine.getCurrentMonsterName());
 		req.setAttribute("monsterImage", engine.getCurrentMonsterImage());
+
+		req.setAttribute("playerDamage", engine.getPlayer().getDamage());
+		req.setAttribute("monsterHealth", engine.getCurrentMonsterHealth());
+		req.setAttribute("monsterMaxHealth", engine.getCurrentMonsterMaxHealth());
 	}
 
 	@Override
@@ -89,6 +93,18 @@ public class TBAGServlet extends HttpServlet {
 		}
 		if (command == null) {
 			command = "";
+		}
+
+		if ("main menu".equalsIgnoreCase(command)) {
+			resp.sendRedirect(req.getContextPath() + "/index");
+			return;
+		}
+
+		if ("try again".equalsIgnoreCase(command)) {
+			db.resetGame();
+			session.removeAttribute("engine");
+			resp.sendRedirect(req.getContextPath() + "/tbag");
+			return;
 		}
 
 		String result = engine.processCommand(command);

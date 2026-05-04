@@ -65,7 +65,7 @@ public class Room {
 
     public String getHint() {
         if (hint == null || hint.isEmpty()) {
-            return "Objective: Survive the darkness, watch your sanity, and escape the Hollow!";
+            return "";
         }
         return hint;
     }

@@ -1,6 +1,7 @@
 package edu.ycp.cs320.TBAG.servlet;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -11,13 +12,43 @@ import edu.ycp.cs320.TBAG.controller.GameEngine;
 import edu.ycp.cs320.TBAG.db.DatabaseProvider;
 import edu.ycp.cs320.TBAG.db.IDatabase;
 import edu.ycp.cs320.TBAG.model.Player;
+import edu.ycp.cs320.TBAG.model.Room;
 
 public class IndexServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
+	private IDatabase db;
+
+	@Override
+	public void init() throws ServletException {
+		try {
+			db = DatabaseProvider.getInstance();
+		} catch (Exception e) {
+			throw new ServletException("Failed to initialize database", e);
+		}
+	}
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
+
+		Player player = db.findPlayer();
+		List<Room> map = db.findFullMap();
+
+		Room lastRoom = null;
+		for (Room room : map) {
+			if (room.getRoomID() == player.getRoomID()) {
+				lastRoom = room;
+				break;
+			}
+		}
+
+		String roomName = lastRoom != null ? lastRoom.getName() : "Unknown";
+		String roomImage = roomName.toLowerCase().replaceAll("[^a-z0-9]+", "_") + ".png";
+
+		req.setAttribute("lastRoomName", roomName);
+		req.setAttribute("lastRoomImage", roomImage);
+
 		req.getRequestDispatcher("/_view/index.jsp").forward(req, resp);
 	}
 
@@ -27,37 +58,29 @@ public class IndexServlet extends HttpServlet {
 
 		String action = req.getParameter("action");
 
-		// If the user clicked "New Game"
 		if ("new".equals(action)) {
 			try {
-				IDatabase db = DatabaseProvider.getInstance();
-				db.resetGame(); // Wipe the DB and generate a new random map
+				db.resetGame();
 
-				// Clear the engine session so it's forced to load the fresh map
 				req.getSession().removeAttribute("engine");
 
-				// === NEW: Auto-look around the starting room! ===
-				// We create a temporary mini-engine just to generate the starting text
 				GameEngine initEngine = new GameEngine();
 				initEngine.setDatabase(db);
+
 				Player player = db.findPlayer();
 				initEngine.setPlayer(player);
 				initEngine.loadMapFromDatabase();
 
-				// Run the "look" command silently behind the scenes
 				String lookText = initEngine.processCommand("look");
 
-				// Append the detailed room description to the opening dialog and save it
 				player.setDialog(player.getDialog() + "\n" + lookText);
 				db.updatePlayer(player);
-				// ===============================================
 
 			} catch (Exception e) {
-				e.printStackTrace();
+				throw new ServletException("Failed to reset game", e);
 			}
 		}
 
-		// Redirect right into the game page
 		resp.sendRedirect(req.getContextPath() + "/tbag");
 	}
 }

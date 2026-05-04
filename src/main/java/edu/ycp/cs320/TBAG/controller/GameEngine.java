@@ -8,6 +8,7 @@ import edu.ycp.cs320.TBAG.model.Item;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class GameEngine {
 
@@ -16,6 +17,10 @@ public class GameEngine {
 	private List<Monster> monsters;
 	private CombatController combatController;
 	private IDatabase db;
+	private boolean quickTimeActive = false;
+	private String quickTimePassword = "";
+	private long quickTimeEndTime = 0;
+	private int roomsVisited = 0;
 
 	public GameEngine() {
 		this.monsters = new ArrayList<>();
@@ -33,6 +38,10 @@ public class GameEngine {
 		this.map = db.findFullMap();
 	}
 
+	public boolean isGameOver() {
+		return player.getHealth() <= 0 || player.getSanity() <= 0;
+	}
+
 	public Monster getMonsterInCurrentRoom() {
 		for (Monster m : monsters) {
 			if (m.getRoomID() == player.getRoomID() && m.getHealth() > 0) {
@@ -40,6 +49,25 @@ public class GameEngine {
 			}
 		}
 		return null;
+	}
+
+	private Monster generateScaledMonster() {
+		String[] healthMonsters = {"Vampire", "Zombie", "Werewolf"};
+		String[] sanityMonsters = {"Ghost", "Witch", "Demon"};
+
+		String type = (Math.random() > 0.5) ? "health" : "sanity";
+		String randomName;
+
+		if (type.equals("health")) {
+			randomName = healthMonsters[(int)(Math.random() * healthMonsters.length)];
+		} else {
+			randomName = sanityMonsters[(int)(Math.random() * sanityMonsters.length)];
+		}
+
+		int scaledHealth = 15 + (roomsVisited + 4);
+		int scaledDamage = 5 + ((roomsVisited / 2)+1);
+
+		return new Monster(randomName, scaledHealth, scaledDamage, player.getRoomID(), type);
 	}
 
 	public Room getRoomById(int id) {
@@ -52,6 +80,19 @@ public class GameEngine {
 	}
 
 	public String processCommand(String command) {
+		if (command == null) {
+			command = "";
+		}
+
+		command = command.trim();
+		if (isGameOver()) {
+			return "*** GAME OVER ***\nYour body and mind can no longer continue.\nType 'try again' to restart, or 'main menu' to return to the title screen.\n";
+		}
+
+		if (quickTimeActive) {
+			return handleQuickTimeInput(command);
+		}
+
 		Room currentRoom = getRoomById(player.getRoomID());
 
 		if (currentRoom == null) {
@@ -69,38 +110,45 @@ public class GameEngine {
 
 		if (inCombat) {
 			if (action.equals("attack") || action.equals("fight")) {
-				return combatController.attackTurn(player, monsterInRoom);
+				String combatResult = combatController.attackTurn(player, monsterInRoom);
+				db.updatePlayer(player);
+
+				if (isGameOver()) {
+					return combatResult + "\n*** GAME OVER ***\nType 'try again' to restart, or 'main menu' to return to the title screen.\n";
+				}
+
+				return combatResult;
 			} else {
 				return "You can't do that! A " + monsterInRoom.getName() + " blocks your path!\n(Type 'attack' to fight)\n";
 			}
 		}
 
 		switch (action) {
+			case "help":
+				return "Movement: 'north', 'south', 'east', 'west'.\n" +
+						"Items: 'pickup', 'drop <item>', 'equip <weapon>', 'use <item>', 'show inventory'\n" +
+						"Combat: 'attack'\n" +
+						"Other: 'look', 'read <item>', 'open box with <code>'\n";
 			case "north":
 				nextRoomId = currentRoom.getNorth();
 				message = "You went north.\n";
+				roomsVisited++;
 				break;
 			case "south":
 				nextRoomId = currentRoom.getSouth();
 				message = "You went south.\n";
+				roomsVisited++;
 				break;
 			case "east":
 				nextRoomId = currentRoom.getEast();
 				message = "You went east.\n";
+				roomsVisited++;
 				break;
 			case "west":
 				nextRoomId = currentRoom.getWest();
 				message = "You went west.\n";
+				roomsVisited++;
 				break;
-			case "jump":
-				if (player.getHealth() < 100) {
-					message = "Stop jumping, you're hurting yourself.\n";
-				} else {
-					message = "You jumped and hit your head. -10hp\n";
-				}
-				player.setHealth(player.getHealth() - 10);
-				db.updatePlayer(player);
-				return message;
 			case "pickup":
 				return pickUpItem(0);
 			case "drop":
@@ -201,9 +249,12 @@ public class GameEngine {
 
 		player.setRoomID(nextRoomId);
 		db.updatePlayer(player);
+		if (Math.random() < 0.05) {
+			return message + startQuickTimeEvent();
+		}
 
 		if (nextRoomId == 6) {
-			return "\n*** VICTORY! ***\nYou throw open the doors of the " + nextRoom.getName() + " and escape into the misty night! You survived The Hollow!\n\n(Click 'New Game' on the menu to play a newly randomized map)\n";
+			return "\n*** VICTORY! ***\nYou throw open the doors of the " + nextRoom.getName() + " and escape into the misty night! You survived The Hollow!\n\n(Click 'New Game' on the menu or type 'try again' to play a newly randomized map!)\n";
 		}
 
 		message += "\n" + getRoomDescription(nextRoom) + "\n" + getRoomItems() + "\n";
@@ -222,8 +273,8 @@ public class GameEngine {
 				randomName = sanityMonsters[(int)(Math.random() * sanityMonsters.length)];
 			}
 
-			Monster randomMonster = new Monster(randomName, 15, 5, player.getRoomID(), type);
-			monsters.add(randomMonster);
+
+			monsters.add(generateScaledMonster());
 		}
 
 		Monster newMonsterInRoom = getMonsterInCurrentRoom();
@@ -236,22 +287,12 @@ public class GameEngine {
 
 	public String getRoomDescription(Room room) {
 		StringBuilder desc = new StringBuilder("--- " + room.getName() + " ---\n");
-		desc.append(room.getHint()).append("\n\n");
-		if (room.getNorth() != 0) desc.append(getDoorDescription("North", room.getNorth()));
-		if (room.getSouth() != 0) desc.append(getDoorDescription("South", room.getSouth()));
-		if (room.getEast() != 0) desc.append(getDoorDescription("East", room.getEast()));
-		if (room.getWest() != 0) desc.append(getDoorDescription("West", room.getWest()));
-		return desc.toString();
-	}
 
-	private String getDoorDescription(String direction, int roomId) {
-		Room adj = getRoomById(roomId);
-		if (adj != null && adj.isLocked()) {
-			return "To the " + direction + ", there is a heavy door locked requiring a " + adj.getRequiredItem() + ".\n";
-		} else if (adj != null) {
-			return "There is a pathway to the " + direction + ".\n";
+		if (room.getHint() != null && !room.getHint().equals("")) {
+			desc.append(room.getHint()).append("\n");
 		}
-		return "";
+
+		return desc.toString();
 	}
 
 	public String useItem(String itemName, Room currentRoom) {
@@ -351,7 +392,7 @@ public class GameEngine {
 
 		String result = "Your Inventory:\n";
 		for (Item item : player.getInventory().getItems()) {
-			result += "- " + item.getName() + " [" + item.getType() + ", " + item.getEffect() + "]\n";
+			result += "- " + item.getName() + "|" + item.getType() + "|" + item.getEffect() + "\n";
 		}
 		result += "Current damage: " + player.getDamage() + "\n";
 		return result;
@@ -406,6 +447,14 @@ public class GameEngine {
 
 		return "You don't have that item.\n";
 	}
+	public int getCurrentMonsterHealth() {
+		Monster monster = getMonsterInCurrentRoom();
+		return monster != null ? monster.getHealth() : 0;
+	}
+	public int getCurrentMonsterMaxHealth() {
+		return generateScaledMonster().getHealth();
+	}
+
 	public String useItemByName(String command) {
 		if (player.getInventory().getItems().isEmpty()) {
 			return "Your inventory is empty.\n";
@@ -490,6 +539,55 @@ public class GameEngine {
 		}
 
 		return monster.getName().toLowerCase().replace(" ", "_") + ".png";
+	}
+	private String generateQuickTimePassword() {
+		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		Random rand = new Random();
+		StringBuilder password = new StringBuilder();
+
+		for (int i = 0; i < 10; i++) {
+			password.append(chars.charAt(rand.nextInt(chars.length())));
+		}
+
+		return password.toString();
+	}
+
+	private String startQuickTimeEvent() {
+		quickTimeActive = true;
+		quickTimePassword = generateQuickTimePassword();
+		quickTimeEndTime = System.currentTimeMillis() + 10000;
+
+		return "\nYou're frozen by fear! Type: " + quickTimePassword + "\n";
+	}
+
+	private String handleQuickTimeInput(String command) {
+		long now = System.currentTimeMillis();
+
+		if (now > quickTimeEndTime) {
+			quickTimeActive = false;
+			quickTimePassword = "";
+			quickTimeEndTime = 0;
+
+			player.setSanity(player.getSanity() - 15);
+			db.updatePlayer(player);
+
+			if (isGameOver()) {
+				return "*** GAME OVER ***\nYour sanity has collapsed.\nType 'try again' to restart, or 'main menu' to return to the title screen.\n";
+			}
+			else {
+				return "You failed to react in time. You lost 15 sanity.\n";
+			}
+		}
+
+		if (command.equals(quickTimePassword)) {
+			quickTimeActive = false;
+			quickTimePassword = "";
+			quickTimeEndTime = 0;
+
+			return "You broke free from the fear!\n";
+		}
+
+		return "Wrong! Try again quickly. Type: " + quickTimePassword + "\n";
 	}
 
 }

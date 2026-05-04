@@ -81,7 +81,7 @@ public class DerbyDatabase implements IDatabase {
 									" sanity integer, " +
 									" damage integer, " +
 									" room_id integer, " +
-									" dialog varchar(3000)" +
+									" dialog varchar(20000)" +
 									")"
 					);
 					stmt1.executeUpdate();

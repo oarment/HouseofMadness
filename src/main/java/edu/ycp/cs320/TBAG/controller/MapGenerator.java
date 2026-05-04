@@ -62,15 +62,27 @@ public class MapGenerator {
 
         int nextItemId = 100;
 
+        // === Puzzle box ===
         int boxRoomId = safeRooms[rand.nextInt(safeRooms.length)];
         Item box = new Item(nextItemId++, "Puzzle Box", "puzzle", 0, boxRoomId);
         map.get(boxRoomId - 1).getInventory().addItem(box);
 
+        // === Torn note ===
         int pinCode = 1000 + rand.nextInt(9000);
         int noteRoomId = safeRooms[rand.nextInt(safeRooms.length)];
         Item note = new Item(nextItemId++, "Torn Note", "note", pinCode, noteRoomId);
         map.get(noteRoomId - 1).getInventory().addItem(note);
 
+        // === GUARANTEED WEAPONS ===
+        map.get(3 - 1).getInventory().addItem(
+                new Item(nextItemId++, "Crowbar", "weapon", 15, 3)
+        );
+
+        map.get(7 - 1).getInventory().addItem(
+                new Item(nextItemId++, "Knife", "weapon", 20, 7)
+        );
+
+        // === Guaranteed consumables ===
         int healthRoomId = rand.nextInt(12) + 1;
         map.get(healthRoomId - 1).getInventory().addItem(
                 new Item(nextItemId++, "Health Potion", "health", 25, healthRoomId)
@@ -81,6 +93,7 @@ public class MapGenerator {
                 new Item(nextItemId++, "Sanity Pills", "sanity", 15, sanityRoomId)
         );
 
+        // === Random extra loot ===
         for (int i = 0; i < 12; i++) {
             if (rand.nextDouble() < 0.25) {
                 int roomId = i + 1;

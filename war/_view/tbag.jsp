@@ -54,8 +54,6 @@
         }
 
         .dialog-box {
-            display: flex;
-            flex-direction: column-reverse;
             width: 500px;
             height: 500px;
             overflow-y: auto;
@@ -65,6 +63,10 @@
             white-space: pre-line;
             margin-bottom: 15px;
             background-color: #1b1b1d;
+
+            font-family: "Courier New", monospace;
+            font-size: 16px;
+            line-height: 1.4;
         }
 
         .command-box {
@@ -161,12 +163,43 @@
             color: gray;
             font-size: 18px;
         }
+        .damage {
+            color: #ff9900;
+            font-weight: bold;
+        }
+
+        .monster-health-bar {
+            margin-top: 10px;
+            width: 260px;
+            height: 18px;
+            border: 1px solid #ff4d4d;
+            background-color: #2e2d30;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .monster-health-fill {
+            height: 100%;
+            background-color: #ff4d4d;
+            box-sizing: border-box;
+        }
     </style>
 
     <script>
         window.onload = function() {
             document.getElementById("command").focus();
         };
+         window.onload = function() {
+                const box = document.querySelector(".dialog-box");
+                if (box) {
+                    box.scrollTop = box.scrollHeight;
+                }
+
+                const input = document.getElementById("command");
+                if (input) {
+                    input.focus();
+                }
+            };
     </script>
 </head>
 
@@ -182,6 +215,7 @@
                     <tr>
                         <td class="health">Health: ${player.health}</td>
                         <td class="sanity" style="padding-left: 30px;">Sanity: ${player.sanity}</td>
+                        <td class="damage" style="padding-left: 30px;">Damage: ${player.damage}</td>
                     </tr>
                 </table>
 
@@ -218,12 +252,23 @@
                 <div class="south ${canGoSouth ? 'valid' : 'invalid'}">South</div>
             </div>
 
+
             <c:choose>
                 <c:when test="${inCombat}">
                     <div class="monster-box">
                         <img src="${pageContext.servletContext.contextPath}/static/images/monsters/${monsterImage}"
                              alt="${monsterName}" />
                         <div class="monster-name">${monsterName}</div>
+
+                        <div class="monster-health-bar">
+                            <div class="monster-health-fill"
+                                 style="width: ${monsterMaxHealth > 0 ? (monsterHealth * 100 / monsterMaxHealth) : 0}%;">
+                            </div>
+                        </div>
+
+                        <div style="color:#ff4d4d; margin-top:5px;">
+                            HP: ${monsterHealth} / ${monsterMaxHealth}
+                        </div>
                     </div>
                 </c:when>
 
