@@ -2,8 +2,10 @@ package edu.ycp.cs320.TBAG.controller;
 import edu.ycp.cs320.TBAG.model.Room;
 import edu.ycp.cs320.TBAG.model.Item;
 
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class RoomController {
 
@@ -11,6 +13,7 @@ public class RoomController {
     public List<Room> map;
     public List<Room> initializeMap() {
         List<Room> map = new ArrayList<>();
+
 
         map.add(new Room(1, "Main Hall, Front", 4, 0, 3, 2));
         map.add(new Room(2, "Lounge", 0, 0, 1, 0));
@@ -24,8 +27,21 @@ public class RoomController {
         map.get(1).getInventory().addItem(new Item("keys", 0));
         map.get(3).getInventory().addItem(new Item("Potion", 20));
 
+
+        // NPC Hints to specific rooms
+        map.get(0).setHint("It's pretty dark in here. You should probably grab that Flashlight!");
+        map.get(1).setHint("Someone left their keys behind. I bet those will be useful later.");
+        map.get(3).setHint("You might want to grab that Potion in case you jump and hit your head!");
+        map.get(7).setHint("It's just a bathroom. Nothing to see here, let's keep moving.");
+
+
         return map;
     }
+
+
+
+
+
 
 
 
